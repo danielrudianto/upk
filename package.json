@@ -1,0 +1,24 @@
+{
+  "name": "abangku_node",
+  "version": "1.0.0",
+  "description": "Aplikasi penunjang Unit Pelayanan Koperasi melalui AbangKu",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon src/app.ts"
+  },
+  "author": "xunny.id",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^3.14.0",
+    "@types/dotenv": "^8.2.0",
+    "@types/express": "^4.17.13",
+    "@types/express-validator": "^3.0.0",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "express-validator": "^6.14.0",
+    "nodemon": "^2.0.16",
+    "prisma": "^3.14.0",
+    "typescript": "^4.6.4"
+  }
+}
