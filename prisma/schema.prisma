@@ -15,7 +15,6 @@ model branch {
   branch_parent_id Int?
   branch           branch?  @relation("branchTobranch_branch_parent_id", fields: [branch_parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "branch_ibfk_1")
   other_branch     branch[] @relation("branchTobranch_branch_parent_id")
-  user             user[]
 
   @@index([branch_parent_id], map: "branch_ibfk_1_idx")
 }
@@ -81,28 +80,16 @@ model post_reaction {
   @@index([user_id], map: "post_reaction_ibfk_2_idx")
 }
 
-model purchase_type {
-  id               Int                @id
-  name             String             @db.VarChar(100)
-  description      String             @db.VarChar(200)
-  created_by       Int
-  created_at       DateTime           @default(now()) @db.DateTime(0)
-  administrator    administrator      @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "purchase_type_ibfk_1")
-  user_transaction user_transaction[]
-
-  @@index([name, description], map: "purchase_type_fulltext")
-  @@index([created_by], map: "purchase_type_ibfk_1_idx")
-}
-
 model user {
   id                Int                 @id @default(autoincrement())
   name              String              @db.VarChar(100)
   phone_number      String              @unique(map: "phone_number_UNIQUE") @db.VarChar(100)
   nik               String              @unique(map: "nik_UNIQUE") @db.VarChar(18)
+  password          String              @db.VarChar(100)
   created_at        DateTime            @default(now()) @db.DateTime(0)
   updated_at        DateTime?           @db.DateTime(0)
-  branch_id         Int
-  branch            branch              @relation(fields: [branch_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_ibfk_1")
+  district_id       Int
+  district          district            @relation(fields: [district_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_ibfk_1")
   comment_reaction  comment_reaction[]
   post              post[]
   post_comment      post_comment[]
@@ -111,7 +98,7 @@ model user {
   user_token        user_token[]
   user_transaction  user_transaction[]
 
-  @@index([branch_id], map: "user_ibfk_1_idx")
+  @@index([district_id], map: "user_ibfk_1")
 }
 
 model user_subscription {
@@ -141,37 +128,83 @@ model user_token {
 }
 
 model user_transaction {
-  id                 Int            @id @default(autoincrement())
+  id                 Int              @id @default(autoincrement())
   created_by         Int
-  created_at         DateTime?      @db.DateTime(0)
-  value              Decimal        @db.Decimal(50, 4)
-  service            Decimal        @db.Decimal(50, 4)
-  discount           Decimal        @db.Decimal(50, 4)
-  purchase_type_id   Int?
-  payment_id         String         @unique(map: "payment_id_UNIQUE") @db.VarChar(100)
+  created_at         DateTime?        @db.DateTime(0)
+  value              Decimal          @db.Decimal(50, 4)
+  service            Decimal          @db.Decimal(50, 4)
+  discount           Decimal          @db.Decimal(50, 4)
+  product_package_id Int?
+  payment_id         String           @unique(map: "payment_id_UNIQUE") @db.VarChar(100)
   payment_method_id  Int
-  is_paid            Boolean?       @default(false)
-  is_delete          Boolean?       @default(false)
-  paid_at            DateTime?      @db.DateTime(0)
-  branch_transaction Boolean?       @default(false)
-  payment_reference  String?        @unique(map: "payment_reference_UNIQUE") @db.VarChar(50)
-  purchase_reference String         @db.VarChar(100)
-  note               String?        @db.VarChar(200)
-  user               user           @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_transaction_ibfk_1")
-  payment_method     payment_method @relation(fields: [payment_method_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_transaction_ibfk_3")
-  purchase_type      purchase_type? @relation(fields: [purchase_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_transaction_ibfk_2")
+  is_paid            Boolean?         @default(false)
+  is_delete          Boolean?         @default(false)
+  paid_at            DateTime?        @db.DateTime(0)
+  branch_transaction Boolean?         @default(false)
+  payment_reference  String?          @unique(map: "payment_reference_UNIQUE") @db.VarChar(50)
+  purchase_reference String           @db.VarChar(100)
+  note               String?          @db.VarChar(200)
+  user               user             @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_transaction_ibfk_1")
+  payment_method     payment_method   @relation(fields: [payment_method_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_transaction_ibfk_3")
+  product_package    product_package? @relation(fields: [product_package_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_transaction_ibfk_2")
 
   @@index([created_by], map: "user_transaction_ibfk_1_idx")
-  @@index([purchase_type_id], map: "user_transaction_ibfk_2_idx")
+  @@index([product_package_id], map: "user_transaction_ibfk_2_idx")
   @@index([payment_method_id], map: "user_transaction_ibfk_3_idx")
   @@index([note, purchase_reference], map: "user_transaction_fulltext")
 }
 
 model administrator {
-  id            Int             @id @default(autoincrement())
-  name          String          @db.VarChar(45)
-  nik           String          @unique(map: "nik_UNIQUE") @db.VarChar(45)
-  phone_number  String          @db.VarChar(45)
-  is_active     Boolean
-  purchase_type purchase_type[]
+  id                                                        Int               @id @default(autoincrement())
+  name                                                      String            @db.VarChar(45)
+  nik                                                       String            @unique(map: "nik_UNIQUE") @db.VarChar(45)
+  phone_number                                              String            @db.VarChar(45)
+  is_active                                                 Boolean
+  product_package_administratorToproduct_package_created_by product_package[] @relation("administratorToproduct_package_created_by")
+  product_package_administratorToproduct_package_deleted_by product_package[] @relation("administratorToproduct_package_deleted_by")
+  product_type                                              product_type[]
+}
+
+model district {
+  id           Int     @id @default(autoincrement())
+  provinsi_id  String  @db.VarChar(2)
+  kota_id      String? @db.VarChar(2)
+  kecamatan_id String? @db.VarChar(2)
+  kelurahan_id String? @db.VarChar(4)
+  name         String  @db.VarChar(100)
+  user         user[]
+
+  @@index([name], map: "district_fulltext")
+  @@index([provinsi_id, kota_id, kecamatan_id, kelurahan_id], map: "district_index")
+}
+
+model product_package {
+  id                                                      Int                @id
+  name                                                    String             @db.VarChar(45)
+  description                                             String             @db.VarChar(200)
+  price                                                   Decimal            @db.Decimal(50, 4)
+  product_type_id                                         Int
+  created_by                                              Int?
+  created_at                                              DateTime?          @db.DateTime(0)
+  is_delete                                               Boolean?
+  deleted_by                                              Int?
+  deleted_at                                              DateTime?          @db.DateTime(0)
+  administrator_administratorToproduct_package_created_by administrator?     @relation("administratorToproduct_package_created_by", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "product_package_ibfk_1")
+  administrator_administratorToproduct_package_deleted_by administrator?     @relation("administratorToproduct_package_deleted_by", fields: [deleted_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "product_package_ibfk_2")
+  user_transaction                                        user_transaction[]
+
+  @@index([created_by], map: "product_package_ibfk_1_idx")
+  @@index([deleted_by], map: "product_package_ibfk_2_idx")
+}
+
+model product_type {
+  id            Int           @id
+  name          String        @db.VarChar(100)
+  description   String        @db.VarChar(200)
+  created_by    Int
+  created_at    DateTime      @default(now()) @db.DateTime(0)
+  administrator administrator @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "product_type_ibfk_1")
+
+  @@index([name, description], map: "purchase_type_fulltext")
+  @@index([created_by], map: "purchase_type_ibfk_1_idx")
 }
