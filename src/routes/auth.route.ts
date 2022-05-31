@@ -2,6 +2,9 @@ import { Router } from "express";
 import { PrismaClient } from '@prisma/client';
 import { compare, hash } from 'bcrypt';
 import { sign } from "jsonwebtoken";
+import { v4 } from "uuid";
+
+import firebase from '../firebase';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -127,19 +130,29 @@ router.post("/register", async(req, res, next) => {
                     nik: nik,
                     phone_number: formatted_phone_number,
                     password: hashedPassword,
-                    district_id: district_id
+                    district_id: district_id,
+                    uid: v4()
                 }
             }).then(() => {
-                return res.status(201).send("Pendaftaran pengguna berhasil.");
+                firebase.auth().createUser({
+                    phoneNumber: `+${formatted_phone_number}`,
+                    displayName: name,
+                    password: password,
+                    disabled: false
+                }).then(user => {
+                    console.log(`Jalan loh ${user}`);
+                    return res.status(201).send("Pendaftaran pengguna berhasil.");
+                }).catch(error => {
+                    console.log(error);
+                    return res.status(500).send(error);
+                })
             }).catch(error => {
-                console.log(error);
                 return res.status(500).send(error);
             })
         } else {
-            return res.status(500).send("Format NIK tidak dikenal.");
+            return res.status(500).send("Format NIK tidak dikenal. Mohon isikan lokasi sesuai dengan KTP terdaftar.");
         }
     }).catch(error => {
-        console.error(error);
         return res.status(500).send(error);
     })
 })

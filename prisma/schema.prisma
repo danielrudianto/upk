@@ -89,6 +89,8 @@ model user {
   created_at        DateTime            @default(now()) @db.DateTime(0)
   updated_at        DateTime?           @db.DateTime(0)
   district_id       Int
+  authenticated_at  DateTime?           @db.DateTime(0)
+  uid               String              @unique(map: "uid_UNIQUE") @db.VarChar(36)
   district          district            @relation(fields: [district_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_ibfk_1")
   comment_reaction  comment_reaction[]
   post              post[]

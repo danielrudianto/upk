@@ -2,10 +2,16 @@ import express from 'express';
 import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
 
+import { initializeApp } from 'firebase-admin/app';
+
 import authRoutes from './routes/auth.route';
 import districtRoutes from './routes/district.route';
 
 dotenv.config();
+
+const firebaseConfig = {
+  //...
+};
 
 const app = express();
 let JSONParser = bodyParser.json();
