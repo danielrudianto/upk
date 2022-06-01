@@ -1,9 +1,9 @@
-import { Router } from "express";
-import { PrismaClient } from '@prisma/client';
-
-const router = Router();
-const prisma = new PrismaClient();
-
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const client_1 = require("@prisma/client");
+const router = (0, express_1.Router)();
+const prisma = new client_1.PrismaClient();
 router.get("/history", (req, res, next) => {
     /*
         Get history of transaction based on user authorization
@@ -13,15 +13,15 @@ router.get("/history", (req, res, next) => {
         3. Success status
         4. Page
     */
-
+    var _a, _b;
     const page = (!req.query.page) ? 1 : Math.max(parseInt(req.query.page.toString()), 1);
-    const limit = parseInt(process.env.LIMIT!);
+    const limit = parseInt(process.env.LIMIT);
     const offset = (page - 1) * limit;
-    if(!req.query.start || !req.query.end){
+    if (!req.query.start || !req.query.end) {
         // If date range is not specified, send all history data //
         prisma.$transaction([
             prisma.user_transaction.findMany({
-                where:{
+                where: {
                     created_by: req.body.userId
                 },
                 orderBy: {
@@ -53,7 +53,7 @@ router.get("/history", (req, res, next) => {
                 }
             }),
             prisma.user_transaction.count({
-                where:{
+                where: {
                     created_by: req.body.userId
                 }
             })
@@ -61,21 +61,21 @@ router.get("/history", (req, res, next) => {
             res.status(200).send({
                 data: result[0],
                 count: result[1]
-            })
+            });
         }).catch(error => {
             res.status(500).send(error);
-        })
-    } else {
+        });
+    }
+    else {
         // If date range is specified, send all history data in the date range //
-        const start = new Date(req.query.start?.toString());
-        const end = new Date(req.query.end?.toString());
+        const start = new Date((_a = req.query.start) === null || _a === void 0 ? void 0 : _a.toString());
+        const end = new Date((_b = req.query.end) === null || _b === void 0 ? void 0 : _b.toString());
         start.setHours(0, 0, 0);
         end.setDate(end.getDate() + 1);
         end.setHours(0, 0, 0);
-
         prisma.$transaction([
             prisma.user_transaction.findMany({
-                where:{
+                where: {
                     created_by: req.body.userId,
                     AND: [
                         {
@@ -119,7 +119,7 @@ router.get("/history", (req, res, next) => {
                 }
             }),
             prisma.user_transaction.count({
-                where:{
+                where: {
                     created_by: req.body.userId
                 }
             })
@@ -127,13 +127,11 @@ router.get("/history", (req, res, next) => {
             res.status(200).send({
                 data: result[0],
                 count: result[1]
-            })
+            });
         }).catch(error => {
             res.status(500).send(error);
-        })
+        });
     }
-})
-
+});
 router.post("/", (req, res, next) => {
-    
-})
+});
