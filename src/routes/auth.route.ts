@@ -124,26 +124,27 @@ router.post("/register", async(req, res, next) => {
 
         // Everything matches up
         if(result?.provinsi_id == _provinsi_id && result.kota_id == _city_id && result.kecamatan_id == _kecamatan_id){
-            prisma.user.create({
-                data: {
-                    name: name,
-                    nik: nik,
-                    phone_number: formatted_phone_number,
-                    password: hashedPassword,
-                    district_id: district_id,
-                    uid: v4()
-                }
-            }).then(() => {
+            prisma.$transaction([
+                prisma.user.create({
+                    data: {
+                        name: name,
+                        nik: nik,
+                        phone_number: formatted_phone_number,
+                        password: hashedPassword,
+                        district_id: district_id,
+                        uid: v4()
+                    }
+                })
+            ])
+            .then(() => {
                 firebase.auth().createUser({
                     phoneNumber: `+${formatted_phone_number}`,
                     displayName: name,
                     password: password,
                     disabled: false
-                }).then(user => {
-                    console.log(`Jalan loh ${user}`);
+                }).then(() => {
                     return res.status(201).send("Pendaftaran pengguna berhasil.");
                 }).catch(error => {
-                    console.log(error);
                     return res.status(500).send(error);
                 })
             }).catch(error => {
