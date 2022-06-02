@@ -7,31 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model branch {
-  id               Int      @id @default(autoincrement())
-  name             String   @unique(map: "name_UNIQUE") @db.VarChar(45)
-  description      String   @db.VarChar(45)
-  is_delete        Boolean  @default(false)
-  branch_parent_id Int?
-  branch           branch?  @relation("branchTobranch_branch_parent_id", fields: [branch_parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "branch_ibfk_1")
-  other_branch     branch[] @relation("branchTobranch_branch_parent_id")
-
-  @@index([branch_parent_id], map: "branch_ibfk_1_idx")
-}
-
-model comment_reaction {
-  id              Int          @id @default(autoincrement())
-  created_by      Int
-  created_at      DateTime     @default(now()) @db.DateTime(0)
-  is_delete       Boolean      @default(false)
-  post_comment_id Int
-  user            user         @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "comment_reaction_ibfk_1")
-  post_comment    post_comment @relation(fields: [post_comment_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "comment_reaction_ibfk_2")
-
-  @@index([created_by], map: "comment_reaction_ibfk_1_idx")
-  @@index([post_comment_id], map: "comment_reaction_ibfk_1_idx1")
-}
-
 model payment_method {
   id                Int                 @id @default(autoincrement())
   name              String              @unique(map: "name_UNIQUE") @db.VarChar(100)
@@ -40,44 +15,33 @@ model payment_method {
 }
 
 model post {
-  id            Int             @id @default(autoincrement())
-  created_by    Int
-  created_at    DateTime        @default(now()) @db.DateTime(0)
-  description   String?         @db.Text
-  is_delete     Boolean         @default(false)
-  user          user            @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "post_ibfk_1")
-  post_comment  post_comment[]
-  post_reaction post_reaction[]
+  id           Int            @id @default(autoincrement())
+  created_by   Int
+  created_at   DateTime       @default(now()) @db.DateTime(0)
+  caption      String?        @db.Text
+  is_delete    Boolean        @default(false)
+  uid          String         @unique(map: "uid_UNIQUE") @db.VarChar(45)
+  user         user           @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "post_ibfk_1")
+  post_comment post_comment[]
+  post_media   post_media[]
+  reaction     reaction[]
 
   @@index([created_by], map: "post_ibfk_1_idx")
 }
 
 model post_comment {
-  id               Int                @id @default(autoincrement())
-  user_id          Int
-  comment          String             @db.Text
-  created_at       DateTime           @default(now()) @db.DateTime(0)
-  is_delete        Int                @default(0) @db.TinyInt
-  post_id          Int?
-  post             post?              @relation(fields: [post_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "post_comment_ibfk_1")
-  user             user               @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "post_comment_ibfk_2")
-  comment_reaction comment_reaction[]
+  id         Int        @id @default(autoincrement())
+  user_id    Int
+  comment    String     @db.Text
+  created_at DateTime   @default(now()) @db.DateTime(0)
+  is_delete  Int        @default(0) @db.TinyInt
+  post_id    Int?
+  post       post?      @relation(fields: [post_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "post_comment_ibfk_1")
+  user       user       @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "post_comment_ibfk_2")
+  reaction   reaction[]
 
   @@index([post_id], map: "post_comment_ibfk_1_idx")
   @@index([user_id], map: "post_comment_ibfk_2_idx")
-}
-
-model post_reaction {
-  id         Int      @id @default(autoincrement())
-  user_id    Int
-  post_id    Int
-  created_at DateTime @default(now()) @db.DateTime(0)
-  is_delete  Boolean  @default(false)
-  post       post     @relation(fields: [post_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "post_reaction_ibfk_1")
-  user       user     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "post_reaction_ibfk_2")
-
-  @@index([post_id], map: "post_reaction_ibfk_1_idx")
-  @@index([user_id], map: "post_reaction_ibfk_2_idx")
 }
 
 model user {
@@ -89,13 +53,10 @@ model user {
   created_at        DateTime            @default(now()) @db.DateTime(0)
   updated_at        DateTime?           @db.DateTime(0)
   district_id       Int
-  authenticated_at  DateTime?           @db.DateTime(0)
-  uid               String              @unique(map: "uid_UNIQUE") @db.VarChar(36)
   district          district            @relation(fields: [district_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_ibfk_1")
-  comment_reaction  comment_reaction[]
   post              post[]
   post_comment      post_comment[]
-  post_reaction     post_reaction[]
+  reaction          reaction[]
   user_subscription user_subscription[]
   user_token        user_token[]
   user_transaction  user_transaction[]
@@ -209,4 +170,32 @@ model product_type {
 
   @@index([name, description], map: "purchase_type_fulltext")
   @@index([created_by], map: "purchase_type_ibfk_1_idx")
+}
+
+model post_media {
+  id      Int     @id @default(autoincrement())
+  post_id Int
+  url     String  @unique(map: "url_UNIQUE") @db.VarChar(500)
+  name    String? @db.VarChar(500)
+  post    post    @relation(fields: [post_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "post_media_ibfk_1")
+
+  @@index([post_id], map: "post_media_ibfk_1_idx")
+}
+
+model reaction {
+  id           Int          @id @default(autoincrement())
+  post_id      Int
+  comment_id   Int
+  reaction     Int
+  created_by   Int?
+  created_at   DateTime?    @default(now()) @db.DateTime(0)
+  is_delete    Boolean?     @default(false)
+  deleted_at   DateTime?    @db.DateTime(0)
+  post_comment post_comment @relation(fields: [comment_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "reaction_ibfk_1")
+  user         user?        @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "reaction_ibfk_3")
+  post         post         @relation(fields: [post_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "reaction_ibfk_2")
+
+  @@index([comment_id], map: "reaction_ibfk_1_idx")
+  @@index([post_id], map: "reaction_ibfk_2_idx")
+  @@index([created_by], map: "reaction_ibfk_3_idx")
 }

@@ -132,7 +132,6 @@ router.post("/register", async(req, res, next) => {
                         phone_number: formatted_phone_number,
                         password: hashedPassword,
                         district_id: district_id,
-                        uid: v4()
                     }
                 })
             ])
