@@ -43,16 +43,15 @@ router.post("/", upload.array("file"), (req, res, next) => {
                         destination: `${uid}.${extension}`,
                         resumable: true,
                         public: true
-                    }, (err, file) => {
-                        transactions.push(
-                            prisma.post_media.create({
-                                data: {
-                                    name: _name,
-                                    url: `https://firebasestorage.googleapis.com/v0/b/gs://abangku-apps.appspot.com/o/${uid}.${extension}`,
-                                    post_id: result.id
-                                }
+                    }, async(err, file) => {
+                        await prisma.post_media.create({
+                            data: {
+                                name: _name,
+                                url: `https://firebasestorage.googleapis.com/v0/b/gs://abangku-apps.appspot.com/o/${uid}.${extension}`,
+                                post_id: result.id
                             }
-                        ))
+                        })
+                        
                         fs.unlinkSync(path);
                     });
                 }
