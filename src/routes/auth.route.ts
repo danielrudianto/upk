@@ -4,7 +4,7 @@ import { compare, hash } from 'bcrypt';
 import { sign } from "jsonwebtoken";
 import { v4 } from "uuid";
 
-import firebase from '../firebase';
+import firebase from '../helper/firebase';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -132,6 +132,7 @@ router.post("/register", async(req, res, next) => {
                         phone_number: formatted_phone_number,
                         password: hashedPassword,
                         district_id: district_id,
+                        uid: v4()
                     }
                 })
             ])
