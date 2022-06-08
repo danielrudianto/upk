@@ -31,4 +31,38 @@ router.post("/", async(req, res, next) => {
     }
 })
 
+router.delete("/:commentId", async(req, res, next) => {
+    const commentId = parseInt(req.params.commentId);
+    const comment = await prisma.post_comment.findUnique({
+        where:{
+            id: commentId
+        },
+        select: {
+            is_delete: true,
+            post: {
+                select: {
+                    is_delete: true
+                }
+            }
+        }
+    });
+
+    if(comment == null || comment.is_delete || comment.post?.is_delete){
+        return res.status(404).send("Komentar tidak ditemukan.");
+    }
+
+    prisma.post_comment.update({
+        where:{
+            id: commentId
+        },
+        data: {
+            is_delete: true
+        }
+    }).then(result => {
+        res.status(200).send(result);
+    }).catch(error => {
+        res.status(500).send(error);
+    })
+})
+
 export default router;
