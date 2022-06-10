@@ -56,19 +56,14 @@ export class BRI_service {
             expiredDate: dateHelper(expiredDate)
         }
 
-        axios.post(process.env.BRI_URL!, body, {
+        return axios.post(process.env.BRI_URL!, body, {
             headers: {
                 "Authorization": `Bearer ${this.BRI_TOKEN}`,
                 "BRI-Timestamp": ISOdate,
                 "BRI-Signature": this.getAuthHeader("POST", process.env.BRI_URL!, body, ISOdate),
                 "Content-Type": "application/json"
             }
-
-        }).then(result => {
-            console.log(result);
-        }).catch(error => {
-
-        })
+        });
     }
 
     static getAuthHeader(httpMethod: string, requestUrl: string, requestBody: any, date: string) {

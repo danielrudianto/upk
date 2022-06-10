@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
-import BRI_service from '../helper/bank.helper';
+import { BRI_service } from '../helper/bank.service';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -35,12 +35,49 @@ router.post("/", async(req, res, next) => {
     const userId = req.body.userId;
     const payment_method = parseInt(req.body.payment_method);
 
-    // Check last subscription of a user
-    const subscription_expire_date = await prisma.user_subscription.findFirst({
+    const date = new Date();
+    date.setDate(date.getDate() + 1);
+    date.setHours(0, 0, 0, 0);
+
+    let monthAfterDate = new Date();
+
+    const subscription = await prisma.subscription_price.findFirst({
         where: {
-            
-        }
-    })
+            effective_date: {
+                lte: date
+            }
+        },
+        orderBy: {
+            effective_date: "desc"
+        },
+        take: 1,
+        skip: 0
+    });
+
+    const subscriptionPrice = (subscription == null || subscription.price == null) ? 0 : parseInt(subscription.price.toString());
+
+    const expiration = new Date();
+    expiration.setHours(expiration.getHours(), expiration.getMinutes() + 30, expiration.getSeconds(), 0);
+
+    // Check last subscription of a user
+    const lastSubscription = await prisma.user_subscription.findFirst({
+        where: {
+            is_paid: true
+        },
+        select: {
+            valid_until: true
+        },
+        orderBy: {
+            valid_from: "desc"
+        },
+        take: 1,
+        skip: 0
+    });
+    
+    const subscriptionExpireDate = (lastSubscription == null || lastSubscription.valid_until == null) ? monthAfterDate : new Date(lastSubscription.valid_until);
+    subscriptionExpireDate.setDate(date.getDate() + 30);
+    subscriptionExpireDate.setHours(23, 59, 59, 99);
+
     switch(payment_method){
         case 1:
             // Payment using BRI Virtual account
@@ -52,10 +89,17 @@ router.post("/", async(req, res, next) => {
             });
 
             if(user != null){
-                BRI_service.createVirtualAccount();
-                res.status(201).send("Virtual account berhasil dibuat.");
+                const userId = user.id;
+                const userUid = userId.toString().padStart(10, "0");
+
+                BRI_service.createVirtualAccount(userUid, user.name, subscriptionPrice, `Biaya keanggotaan tetap hingga ${subscriptionExpireDate?.getDay()}`, expiration).then(() => {
+                    return res.status(201).send("Virtual account berhasil dibuat.");
+                }).catch(error => {
+                    return res.status(500).send(error);
+                });
             }
-            break;
+
+            return res.status(401).send("User tidak ditemukan.");
         case 2:
             // Payment using Mandiri Virtual account
             break;

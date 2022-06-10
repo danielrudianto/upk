@@ -1,7 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
-import { BRI_service } from './helper/bank.helper';
+import { BRI_service } from './helper/bank.service';
 
 import { initializeApp } from 'firebase-admin/app';
 
@@ -13,6 +13,7 @@ import commentRoutes from './routes/comment.route';
 import productRoutes from './routes/products.route';
 import transactionRoutes from './routes/transaction.route';
 import paymentRoutes from './routes/payment.route';
+import { hash, hashSync } from 'bcrypt';
 
 dotenv.config();
 

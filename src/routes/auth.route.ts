@@ -4,7 +4,8 @@ import { compare, hash } from 'bcrypt';
 import { sign } from "jsonwebtoken";
 import { v4 } from "uuid";
 
-import firebase from '../helper/firebase';
+import firebase from '../helper/firebase.helper';
+import { authMiddleware } from "../helper/auth.helper";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -204,7 +205,7 @@ router.post("/login", (req, res, next) => {
         } 
 
         const expiration = new Date();
-        expiration.setDate(expiration.getTime() + parseInt(process.env.expiration!) * 60 * 60 * 1000)
+        expiration.setTime(expiration.getTime() + parseInt(process.env.expiration!) * 60 * 60 * 1000)
         const token = sign(
             {
                 id: result.id,
@@ -215,7 +216,7 @@ router.post("/login", (req, res, next) => {
             },
             process.env.TOKEN_KEY!,
             {
-                expiresIn: expiration.getTime()
+                expiresIn: `${process.env.expiration}h`
             }
         )
 
@@ -232,6 +233,71 @@ router.post("/login", (req, res, next) => {
     }).catch(error => {
         return res.status(500).send(error);
     })
+})
+
+router.post("/token", authMiddleware, async(req, res, next) => {
+    const token = req.body.token;
+    const userId = req.body.userId;
+
+    // Check if other user has this token
+    const user_id = await prisma.user_token.findUnique({
+        where:{
+            token: token
+        },
+        select: {
+            user_id: true
+        }
+    });
+
+    // Registered token is not for the same user
+    if(user_id != null && user_id?.user_id != userId){
+        prisma.$transaction([
+            prisma.user_token.delete({
+                where:{
+                    token: token
+                }
+            }),
+            prisma.user_token.create({
+                data: {
+                    user_id: userId,
+                    token: token
+                },
+                select: {
+                    user: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    token: true
+                }
+            })
+        ]).then(result => {
+            return res.status(201).send(result[1])
+        }).catch(error => {
+            return res.status(500).send(error);
+        })
+    } else if(user_id?.user_id == userId){
+        return res.status(200).send("Pengguna sudah terdaftar.");
+    } else {
+        prisma.user_token.create({
+            data: {
+                user_id: userId,
+                token: token
+            },
+            select: {
+                user: {
+                    select: {
+                        name: true
+                    }
+                },
+                token: true
+            }
+        }).then(result => {
+            return res.status(201).send(result)
+        }).catch(error => {
+            return res.status(500).send(error);
+        })
+    }
 })
 
 export default router;

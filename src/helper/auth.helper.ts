@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
+import { verify } from "jsonwebtoken";
 import firebaseHelper from "./firebase.helper";
 
 const prisma = new PrismaClient();
@@ -22,11 +23,13 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction){
         });
     }
 
-    firebaseHelper.auth().verifyIdToken(token).then(decodedToken => {
-        const uid = decodedToken.uid;
+    try {
+        const decodedToken = verify(token, process.env.TOKEN_KEY!);
+        const id = (decodedToken as any).id;
+
         prisma.user.findUnique({
             where: {
-                uid: uid
+                id: id
             }
         }).then(result => {
             if(result == null){
@@ -42,7 +45,8 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction){
         }).catch(() => {
             return res.status(401).send("Pengguna tidak terotorisasi.");
         })
-    }).catch(error => {
-        return res.status(401).send(error);
-    })
+    } catch(error) {
+        console.log(error);
+        return res.status(500).send(error);
+    }
 }

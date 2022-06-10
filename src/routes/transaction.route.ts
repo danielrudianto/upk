@@ -161,6 +161,10 @@ router.post("/", async (req, res, next) => {
   const paymentMethod = parseInt(req.body.payment_method);
   const purchaseReference = req.body.purchase_reference;
 
+  // When purchasing PLN, the purchase_reference is refered as PLN Customer number 
+  // When purchasing BPJS, the purchase_reference is refered as BPJS Customer number 
+  // When purchasing Phone bill, the purchase_reference is refered as Customer's phone number
+
   /* Check availble payment */
 
   const payment = await prisma.payment_method.findUnique({
