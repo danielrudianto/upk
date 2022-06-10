@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
+import BRI_service from '../helper/bank.helper';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -25,6 +26,7 @@ router.get("/price", (req, res, next) => {
     })
 })
 
+// Checking user subscription status
 router.get("/", (req, res, next) => {
     const start_date = new Date(req.body.date);
 })
@@ -32,6 +34,13 @@ router.get("/", (req, res, next) => {
 router.post("/", async(req, res, next) => {
     const userId = req.body.userId;
     const payment_method = parseInt(req.body.payment_method);
+
+    // Check last subscription of a user
+    const subscription_expire_date = await prisma.user_subscription.findFirst({
+        where: {
+            
+        }
+    })
     switch(payment_method){
         case 1:
             // Payment using BRI Virtual account
@@ -43,7 +52,8 @@ router.post("/", async(req, res, next) => {
             });
 
             if(user != null){
-                
+                BRI_service.createVirtualAccount();
+                res.status(201).send("Virtual account berhasil dibuat.");
             }
             break;
         case 2:

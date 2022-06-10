@@ -1,114 +1,11 @@
-import axios from 'axios';
-import { Router } from 'express';
-import { product, productGroup, products } from '../products'
+import { PrismaClient } from "@prisma/client";
+import { Router } from "express";
 
 const router = Router();
-
-router.get("/getByCodeName/:codeName", (req, res, next) => {
-    const codeName = req.params.codeName;
-    axios.post(process.env.RAJABILLER_URL!, {
-        "method"      : "rajabiller.info_produk",
-        "uid"         : process.env.RAJABILLER_UID,
-        "pin"         : process.env.RAJABILLER_PIN,
-        "kode_produk" : codeName
-    }).then(result => {
-        const status = result.data.STATUS;
-
-        // Code name tersedia
-        if(status === "00"){
-            return res.status(200).send({
-                code_product: codeName,
-                price: parseFloat(result.data.HARGA),
-                admin: parseFloat(result.data.ADMIN),
-                comission: parseFloat(result.data.KOMISI),
-            });
-        }
-
-        // Ada error
-        return res.status(500).send({
-            status: status,
-            description: result.data.KET
-        });
-        
-    }).catch(error => {
-        return res.status(500).send(error);
-    })
-})
-
-router.get("/:groupName/:childGroupName", (req, res, next) => {
-    try {
-        const result: any[] = [];
-        const groupIndex = products.findIndex(x => x.group == req.params.groupName);
-        if(groupIndex >= 0){
-            // Group exist
-            const group = products[groupIndex].children;
-            const children = group;
-            const childIndex = (children as productGroup[]).findIndex(x => x.group == req.params.childGroupName);
-            if(childIndex >= 0){
-                return res.status(200).send((products[groupIndex].children[childIndex] as productGroup).children);
-            }
-        }
-
-        return res.status(404).send("Produk tidak ditemukan.");
-    }
-    catch(error) {
-        return res.status(500).send(error);
-    }
-})
-
-router.get("/:groupName", (req, res, next) => {
-    /*
-        Get products children based on a group
-    */
-
-    try {
-        const result: any[] = [];
-        const groupIndex = products.findIndex(x => x.group == req.params.groupName);
-        if(groupIndex >= 0){
-            // Group exist
-            const result: any[] = [];
-            products[groupIndex].children.map(x => {
-                if(x.hasOwnProperty("group")){
-                    result.push({
-                        group: (x as productGroup).group,
-                        logo: (x as productGroup).logo,
-                    })
-                } else {
-                    result.push({
-                        code_product: (x as product).code_product,
-                        description: (x as product).description
-                    })
-                }
-            });
-
-            return res.status(200).send(result);
-        } else {
-            return res.status(404).send("Produk tidak ditemukan.");
-        }
-    }
-    catch(error) {
-        return res.status(500).send(error);
-    }
-});
+const prisma = new PrismaClient();
 
 router.get("/", (req, res, next) => {
-    /*
-        Get product groups from our list
-    */
-    try {
-        const result: any[] = [];
-        products.map((x, index) => {
-        result.push({
-            group: x.group,
-            image: (x.logo == null) ? null : x.logo
-        });        
-        })
-
-        return res.status(200).send(result);
-    }
-    catch(error) {
-        return res.status(500).send(error);
-    }
-});
+    
+})
 
 export default router;
