@@ -124,6 +124,7 @@ router.post("/register", async(req, res, next) => {
         const hashedPassword = await hash(password, 12);
 
         // Everything matches up
+        const uid = v4();
         if(result?.provinsi_id == _provinsi_id && result.kota_id == _city_id && result.kecamatan_id == _kecamatan_id){
             prisma.$transaction([
                 prisma.user.create({
@@ -133,11 +134,13 @@ router.post("/register", async(req, res, next) => {
                         phone_number: formatted_phone_number,
                         password: hashedPassword,
                         district_id: district_id,
+                        uid: uid
                     }
                 })
             ])
             .then(() => {
                 firebase.auth().createUser({
+                    uid: uid,
                     phoneNumber: `+${formatted_phone_number}`,
                     displayName: name,
                     password: password,

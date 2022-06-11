@@ -55,8 +55,7 @@ router.post("/", upload.array("file"), (req, res, next) => {
     prisma.post.create({
         data: {
             caption: caption,
-            // created_by: req.body.userId
-            created_by: 1,
+            created_by: req.body.userId,
             uid: v4(),
         }
     }).then(result => {
