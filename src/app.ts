@@ -14,6 +14,7 @@ import productRoutes from './routes/products.route';
 import transactionRoutes from './routes/transaction.route';
 import paymentRoutes from './routes/payment.route';
 import { hash, hashSync } from 'bcrypt';
+import { authMiddleware } from './helper/auth.helper';
 
 dotenv.config();
 
@@ -29,8 +30,8 @@ const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 app.use("/auth", authRoutes);
 app.use("/district", districtRoutes);
 
-app.use("/post", postRoutes);
-app.use("/comment", commentRoutes);
+app.use("/post", authMiddleware, postRoutes);
+app.use("/comment", authMiddleware, commentRoutes);
 
 app.use("/product", productRoutes);
 app.use('/transaction', transactionRoutes);

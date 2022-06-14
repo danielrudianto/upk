@@ -23,30 +23,28 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction){
         });
     }
 
-    try {
-        const decodedToken = verify(token, process.env.TOKEN_KEY!);
-        const id = (decodedToken as any).id;
-
-        prisma.user.findUnique({
-            where: {
-                id: id
-            }
-        }).then(result => {
-            if(result == null){
-                return res.status(404).json({
-                    auth: false,
-                    message: "User tidak ditemukan.",
-                });
-            } else {
-                req.body.userId = result?.id
-                next();
-            }
-            
-        }).catch(() => {
-            return res.status(401).send("Pengguna tidak terotorisasi.");
-        })
-    } catch(error) {
-        console.log(error);
-        return res.status(500).send(error);
-    }
+    verify(token, process.env.TOKEN_KEY!, (err, decoded) => {
+        if(err){
+            return res.status(500).send(err);
+        } else {
+            const id = parseInt((decoded as any).id);
+            prisma.user.findUnique({
+                where: {
+                    id: id
+                }
+            }).then(result => {
+                if(result == null){
+                    return res.status(404).json({
+                        auth: false,
+                        message: "User tidak ditemukan.",
+                    });
+                } else {
+                    req.body.userId = result.id
+                    next();
+                }
+            }).catch(() => {
+                return res.status(401).send("Pengguna tidak terotorisasi.");
+            })
+        }
+    });
 }

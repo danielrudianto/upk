@@ -208,7 +208,7 @@ router.post("/login", (req, res, next) => {
         } 
 
         const expiration = new Date();
-        expiration.setTime(expiration.getTime() + parseInt(process.env.expiration!) * 60 * 60 * 1000)
+        expiration.setTime(expiration.getTime() + parseInt(process.env.expiration!) * 60 * 60 * 1000);
         const token = sign(
             {
                 id: result.id,
@@ -219,7 +219,7 @@ router.post("/login", (req, res, next) => {
             },
             process.env.TOKEN_KEY!,
             {
-                expiresIn: `${process.env.expiration}h`
+                expiresIn: `24h`
             }
         )
 
