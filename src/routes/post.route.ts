@@ -5,11 +5,12 @@ import fs from 'fs';
 import firebase from '../helper/firebase.helper';
 import upload from '../helper/upload.helper.ts';
 import { verify } from 'jsonwebtoken';
+import { authMiddleware } from '../helper/auth.helper';
 
 const router = Router();
 const prisma = new PrismaClient();
 
-router.get("/", async(req, res, next) => {
+router.get("/", authMiddleware, async(req, res, next) => {
     const last_fetched = (!req.query.last_fetched_post) ? null : req.query.last_fetched_post.toString();
     
     const last_post = (last_fetched == null) ? null : await prisma.post.findUnique({
@@ -121,62 +122,57 @@ router.post("/", upload.array("file"), (req, res, next) => {
             }).then(result => {
                 const bucket = firebase.storage().bucket("gs://abangku-apps.appspot.com");
                 if(files){
-                    (files as any[]).forEach(
-                        file => {
-                            const path = file.path as string;
-                            const name = file.originalname as string;
-                            const _name = name.replace(/\.[^/.]+$/, "");
-                            const extension = name.split('.').pop();
-        
-                            const uid = v4();
-                            bucket.upload(path, {
-                                destination: `${uid}.${extension}`,
-                                resumable: true,
-                                public: true
-                            }, async(err, file) => {
-                                await prisma.post_media.create({
-                                    data: {
-                                        name: _name,
-                                        url: `${uid}.${extension}`,
-                                        post_id: result.id
-                                    }
-                                })
-                                
+                    for(let i = 0; i < files.length; i++){
+                        const file = (files as Express.Multer.File[])[i];
+                        const path = file.path as string;
+                        const name = file.originalname as string;
+                        const _name = name.replace(/\.[^/.]+$/, "");
+                        const extension = name.split('.').pop();
+    
+                        const uid = v4();
+                        bucket.upload(path, {
+                            destination: `${uid}.${extension}`,
+                            resumable: true,
+                            public: true
+                        }).then(() => {
+                            prisma.post_media.create({
+                                data: {
+                                    name: _name,
+                                    url: `${uid}.${extension}`,
+                                    post_id: result.id
+                                }
+                            }).then(() => {
                                 fs.unlinkSync(path);
-                            });
-                        }
-                    )
-                }
-        
-                prisma.post.findUnique({
-                    where:{
-                        id: result.id
-                    },
-                    select: {
-                        id: true,
-                        caption: true,
-                        post_media: {
-                            select: {
-                                name: true,
-                                url: true
-                            }
-                        },
-                        uid: true
+                            }).catch(() => {
+                                return res.status(500).send("Error pada saat mengunggah media.");
+                            })
+                        })
                     }
-                }).then(post => {
-                    return res.status(201).send(post);
-                }).catch(error => {
-                    res.status(500).send(error);
-                })
-                
+
+                    return res.status(201).send("Upload post berhasil.");
+                } else {
+                    prisma.post.create({
+                        data: {
+                            caption: caption,
+                            created_by: id,
+                            uid: v4(),
+                        }
+                    }).then(post => {
+                        return res.status(201).send(post);
+                    }).catch(error => {
+                        console.log(error);
+                        return res.status(500).send(error);
+                    })
+                }
             }).catch(error => {
+                console.log(error);
                 return res.status(500).send(error);
             })    
         }
     });
 })
 
-router.delete("/:postId", async(req, res, next) => {
+router.delete("/:postId", authMiddleware, async(req, res, next) => {
     const postId = parseInt(req.params.postId);
     const post = await prisma.post.findUnique({
         where:{
@@ -199,6 +195,76 @@ router.delete("/:postId", async(req, res, next) => {
         }).catch(error => {
             return res.status(500).send(error);
         })
+    }
+})
+
+router.post("/reaction", authMiddleware, (req, res, next) => {
+    const reaction = req.body.reaction;
+    const post_uid = req.body.post_id;
+    // Assuming there will be other type of reaction such as love, laugh, etc.
+    // 0 is reserved for deleting reaction
+    if(post_uid != null){
+        prisma.post.findUnique({
+            where:{
+                uid: post_uid
+            }
+        }).then(post => {
+            if(post != null && !post.is_delete){
+                prisma.reaction.count({
+                    where:{
+                        created_by: req.body.userId,
+                        post_id: post.id
+                    }
+                }).then(count => {
+                    // User already react to this post
+                    // Delete the reaction
+                    if(count > 0){
+                        prisma.reaction.deleteMany({
+                            where:{
+                                post_id: post.id,
+                                created_by: req.body.userId
+                            }
+                        }).then(result => {
+                            return res.status(201).send("Reaksi berhasil dihapus.");
+                        }).catch(error => {
+                            return res.status(500).send(error);
+                        })
+                    } else {
+                        prisma.reaction.create({
+                            data: {
+                                post_id: post.id,
+                                reaction: 1,
+                                created_by: req.body.userId,
+                                comment_id: null
+                            },
+                            select: {
+                                id: true,
+                                created_at: true,
+                                user: {
+                                    select: {
+                                        name: true,
+                                        uid: true,
+                                        profile_image_url: true
+                                    }
+                                }
+                            }
+                        }).then(() => {
+                            res.status(201).send("Reaksi berhasil ditambahkan.");
+                        }).catch(error => {
+                            res.status(500).send(error);
+                        })
+                    }
+                }).catch(error => {
+                    res.status(500).send(error);
+                })
+                
+            } else {
+                return res.status(404).send("Post tidak ditemukan atau sudah dihapus.");
+            }
+        }).catch(error => {
+            res.status(500).send(error);
+        })
+        
     }
 })
 
