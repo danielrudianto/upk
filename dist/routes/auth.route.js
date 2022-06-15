@@ -16,7 +16,9 @@ const express_1 = require("express");
 const client_1 = require("@prisma/client");
 const bcrypt_1 = require("bcrypt");
 const jsonwebtoken_1 = require("jsonwebtoken");
-const firebase_1 = __importDefault(require("../firebase"));
+const uuid_1 = require("uuid");
+const firebase_helper_1 = __importDefault(require("../helper/firebase.helper"));
+const auth_helper_1 = require("../helper/auth.helper");
 const router = (0, express_1.Router)();
 const prisma = new client_1.PrismaClient();
 router.post("/register", (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -114,6 +116,7 @@ router.post("/register", (req, res, next) => __awaiter(void 0, void 0, void 0, f
         }
         const hashedPassword = yield (0, bcrypt_1.hash)(password, 12);
         // Everything matches up
+        const uid = (0, uuid_1.v4)();
         if ((result === null || result === void 0 ? void 0 : result.provinsi_id) == _provinsi_id && result.kota_id == _city_id && result.kecamatan_id == _kecamatan_id) {
             prisma.$transaction([
                 prisma.user.create({
@@ -123,11 +126,13 @@ router.post("/register", (req, res, next) => __awaiter(void 0, void 0, void 0, f
                         phone_number: formatted_phone_number,
                         password: hashedPassword,
                         district_id: district_id,
+                        uid: uid
                     }
                 })
             ])
                 .then(() => {
-                firebase_1.default.auth().createUser({
+                firebase_helper_1.default.auth().createUser({
+                    uid: uid,
                     phoneNumber: `+${formatted_phone_number}`,
                     displayName: name,
                     password: password,
@@ -190,7 +195,7 @@ router.post("/login", (req, res, next) => {
             return res.status(404).send("Nomor telepon atau password salah, mohon periksa kembali.");
         }
         const expiration = new Date();
-        expiration.setDate(expiration.getTime() + parseInt(process.env.expiration) * 60 * 60 * 1000);
+        expiration.setTime(expiration.getTime() + parseInt(process.env.expiration) * 60 * 60 * 1000);
         const token = (0, jsonwebtoken_1.sign)({
             id: result.id,
             name: result.name,
@@ -198,7 +203,7 @@ router.post("/login", (req, res, next) => {
             phone_number: result.phone_number,
             nik: result.nik
         }, process.env.TOKEN_KEY, {
-            expiresIn: expiration.getTime()
+            expiresIn: `24h`
         });
         return res.status(200).send({
             token: token,
@@ -214,4 +219,68 @@ router.post("/login", (req, res, next) => {
         return res.status(500).send(error);
     });
 });
+router.post("/token", auth_helper_1.authMiddleware, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const token = req.body.token;
+    const userId = req.body.userId;
+    // Check if other user has this token
+    const user_id = yield prisma.user_token.findUnique({
+        where: {
+            token: token
+        },
+        select: {
+            user_id: true
+        }
+    });
+    // Registered token is not for the same user
+    if (user_id != null && (user_id === null || user_id === void 0 ? void 0 : user_id.user_id) != userId) {
+        prisma.$transaction([
+            prisma.user_token.delete({
+                where: {
+                    token: token
+                }
+            }),
+            prisma.user_token.create({
+                data: {
+                    user_id: userId,
+                    token: token
+                },
+                select: {
+                    user: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    token: true
+                }
+            })
+        ]).then(result => {
+            return res.status(201).send(result[1]);
+        }).catch(error => {
+            return res.status(500).send(error);
+        });
+    }
+    else if ((user_id === null || user_id === void 0 ? void 0 : user_id.user_id) == userId) {
+        return res.status(200).send("Pengguna sudah terdaftar.");
+    }
+    else {
+        prisma.user_token.create({
+            data: {
+                user_id: userId,
+                token: token
+            },
+            select: {
+                user: {
+                    select: {
+                        name: true
+                    }
+                },
+                token: true
+            }
+        }).then(result => {
+            return res.status(201).send(result);
+        }).catch(error => {
+            return res.status(500).send(error);
+        });
+    }
+}));
 exports.default = router;

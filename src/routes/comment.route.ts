@@ -29,7 +29,7 @@ router.post("/", async(req, res, next) => {
             res.status(500).send(error);
         })
     }
-})
+});
 
 router.delete("/:commentId", async(req, res, next) => {
     const commentId = parseInt(req.params.commentId);
@@ -63,6 +63,6 @@ router.delete("/:commentId", async(req, res, next) => {
     }).catch(error => {
         res.status(500).send(error);
     })
-})
+});
 
 export default router;

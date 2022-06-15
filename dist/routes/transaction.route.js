@@ -1,137 +1,123 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const client_1 = require("@prisma/client");
+const axios_1 = __importDefault(require("axios"));
+const bank_service_1 = __importDefault(require("../helper/bank.service"));
 const router = (0, express_1.Router)();
 const prisma = new client_1.PrismaClient();
-router.get("/history", (req, res, next) => {
+router.get("/", (req, res, next) => {
+    /* Route to get historical transactions */
+});
+router.post("/", (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     /*
-        Get history of transaction based on user authorization
-        Get the following data to proceed transaction history
-        1. User ID by sending user authorization
-        2. Date range
-        3. Success status
-        4. Page
-    */
-    var _a, _b;
-    const page = (!req.query.page) ? 1 : Math.max(parseInt(req.query.page.toString()), 1);
-    const limit = parseInt(process.env.LIMIT);
-    const offset = (page - 1) * limit;
-    if (!req.query.start || !req.query.end) {
-        // If date range is not specified, send all history data //
-        prisma.$transaction([
-            prisma.user_transaction.findMany({
-                where: {
-                    created_by: req.body.userId
-                },
-                orderBy: {
-                    created_at: "desc"
-                },
-                take: limit,
-                skip: offset,
-                select: {
-                    value: true,
-                    service: true,
-                    discount: true,
-                    payment_method: {
-                        select: {
-                            name: true,
-                        }
-                    },
-                    is_paid: true,
-                    is_delete: true,
-                    paid_at: true,
-                    branch_transaction: true,
-                    payment_reference: true,
-                    purchase_reference: true,
-                    user: {
-                        select: {
-                            name: true,
-                            nik: true
-                        }
-                    }
-                }
-            }),
-            prisma.user_transaction.count({
-                where: {
-                    created_by: req.body.userId
-                }
-            })
-        ]).then(result => {
-            res.status(200).send({
-                data: result[0],
-                count: result[1]
-            });
-        }).catch(error => {
-            res.status(500).send(error);
-        });
+          Route to create a new transaction
+          There area several available transaction
+          1. PLN
+          2. Phone
+          3. BPJS
+      */
+    const productCodeName = req.body.code_name;
+    const branchTransaction = req.body.branch_transaction == 1 ? true : false;
+    const paymentMethod = parseInt(req.body.payment_method);
+    const purchaseReference = req.body.purchase_reference;
+    // When purchasing PLN, the purchase_reference is refered as PLN Customer number 
+    // When purchasing BPJS, the purchase_reference is refered as BPJS Customer number 
+    // When purchasing Phone bill, the purchase_reference is refered as Customer's phone number
+    /* Check availble payment */
+    const payment = yield prisma.payment_method.findUnique({
+        where: {
+            id: paymentMethod,
+        },
+    });
+    if (payment == null || payment.is_delete) {
+        return res.status(500).send("Metode pembayaran tidak dikenal.");
     }
-    else {
-        // If date range is specified, send all history data in the date range //
-        const start = new Date((_a = req.query.start) === null || _a === void 0 ? void 0 : _a.toString());
-        const end = new Date((_b = req.query.end) === null || _b === void 0 ? void 0 : _b.toString());
-        start.setHours(0, 0, 0);
-        end.setDate(end.getDate() + 1);
-        end.setHours(0, 0, 0);
-        prisma.$transaction([
-            prisma.user_transaction.findMany({
-                where: {
+    /* First, get value, service, and discount of a product based on RajaBiller */
+    try {
+        axios_1.default
+            .post(process.env.RAJABILLER_URL, {
+            method: "rajabiller.info_produk",
+            uid: process.env.RAJABILLER_UID,
+            pin: process.env.RAJABILLER_PIN,
+            kode_produk: productCodeName,
+        })
+            .then((result) => {
+            const status = result.data.STATUS;
+            if (status !== "00") {
+                return res.status(500).send("Produk tidak ditemukan.");
+            }
+            prisma.user_transaction
+                .create({
+                data: {
                     created_by: req.body.userId,
-                    AND: [
-                        {
-                            created_at: {
-                                gte: start
-                            }
-                        },
-                        {
-                            created_at: {
-                                lt: end
-                            }
-                        }
-                    ]
+                    value: parseFloat(result.data.HARGA) + parseFloat(result.data.ADMIN),
+                    service: parseInt(process.env.ADMINISTRATION_FEE),
+                    discount: parseFloat(result.data.KOMISI),
+                    product_code_name: productCodeName,
+                    branch_transaction: branchTransaction,
+                    payment_method_id: paymentMethod,
+                    purchase_reference: purchaseReference,
                 },
-                orderBy: {
-                    created_at: "desc"
-                },
-                take: limit,
-                skip: offset,
                 select: {
+                    user: {
+                        select: {
+                            id: true,
+                            name: true
+                        }
+                    },
                     value: true,
                     service: true,
                     discount: true,
-                    payment_method: {
-                        select: {
-                            name: true,
-                        }
-                    },
-                    is_paid: true,
-                    is_delete: true,
-                    paid_at: true,
-                    branch_transaction: true,
-                    payment_reference: true,
                     purchase_reference: true,
-                    user: {
-                        select: {
-                            name: true,
-                            nik: true
-                        }
-                    }
-                }
-            }),
-            prisma.user_transaction.count({
-                where: {
-                    created_by: req.body.userId
+                    id: true
                 }
             })
-        ]).then(result => {
-            res.status(200).send({
-                data: result[0],
-                count: result[1]
+                .then((result) => {
+                // TODO Create Virtual account based on payment method
+                const value = parseFloat(result.value.toString());
+                const discount = parseFloat(result.discount.toString());
+                const service = parseFloat(result.service.toString());
+                const expired = new Date();
+                expired.setHours(expired.getHours(), expired.getMinutes() + 30, expired.getSeconds(), expired.getMilliseconds());
+                switch (payment.id) {
+                    case 1:
+                        // Create BRI Virtual Account
+                        bank_service_1.default.createVirtualAccount(result.user.id.toString().padStart(10, "0"), result.user.name, (value + service - discount), `Transaksi AbangKu #${result.id}`, expired).then(result => {
+                            console.log(result.data);
+                        }).catch(error => {
+                            res.status(500).send("Gagal membuat billing, mohon coba kembali dalam beberapa saat.");
+                        });
+                        break;
+                }
+            })
+                .catch((error) => {
+                return res
+                    .status(500)
+                    .send("Gagal membuat transaksi. Mohon coba kembali.");
             });
-        }).catch(error => {
-            res.status(500).send(error);
+        })
+            .catch((error) => {
+            return res.status(500).send(error);
         });
     }
+    catch (error) {
+        return res.status(500).send(error);
+    }
+}));
+router.delete("/:transactionId", (req, res, next) => {
+    const id = parseInt(req.params.transactionId);
 });
-router.post("/", (req, res, next) => {
-});
+exports.default = router;
