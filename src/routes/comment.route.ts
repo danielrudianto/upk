@@ -4,32 +4,46 @@ import { Router } from "express";
 const router = Router();
 const prisma = new PrismaClient();
 
-router.post("/", async(req, res, next) => {
+router.post("/", (req, res, next) => {
     const post_id = req.body.post_id;
     const comment =req.body.comment;
 
-    const post = await prisma.post.findUnique({
+    prisma.post.findUnique({
         where: {
-            id: post_id
+            uid: post_id
         }
-    });
-
-    if(post == null || post.is_delete){
-        res.status(404).send("Post tidak ditemukan atau sudah dihapus.");
-    } else {
-        prisma.post_comment.create({
-            data: {
-                comment: comment,
-                post_id: post_id,
-                created_by: req.body.userId
-            }
-        }).then(result => {
-            res.status(200).send(result);
-        }).catch(error => {
-            res.status(500).send(error);
-        })
-    }
-});
+    }).then(post => {
+        if(post == null || post.is_delete){
+            return res.status(404).send("Post tidak ditemukan atau sudah dihapus.");
+        } else {
+            prisma.post_comment.create({
+                data: {
+                    comment: comment,
+                    post_id: post_id,
+                    created_by: req.body.userId
+                },
+                select: {
+                    id: true,
+                    comment: true,
+                    user: {
+                        select: {
+                            profile_image_url: true,
+                            uid: true,
+                            name: true
+                        }
+                    },
+                    created_at: true
+                }
+            }).then(result => {
+                return res.status(201).send(result);
+            }).catch(error => {
+                res.status(500).send(error);
+            })
+        }
+    }).catch(error => {
+        res.status(500).send(error);
+    })
+})
 
 router.delete("/:commentId", async(req, res, next) => {
     const commentId = parseInt(req.params.commentId);

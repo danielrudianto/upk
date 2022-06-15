@@ -24,13 +24,14 @@ let JSONParser = bodyParser.json();
 let urlencodedParser = bodyParser.urlencoded({ extended: false });
 
 app.use(JSONParser, urlencodedParser);
+app.use(express.static('temp'));
 
 const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
 app.use("/auth", authRoutes);
 app.use("/district", districtRoutes);
 
-app.use("/post", authMiddleware, postRoutes);
+app.use("/post", postRoutes);
 app.use("/comment", authMiddleware, commentRoutes);
 
 app.use("/product", productRoutes);
