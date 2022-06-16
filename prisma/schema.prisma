@@ -59,6 +59,7 @@ model user {
   district_id       Int
   uid               String              @unique(map: "uid_UNIQUE") @db.VarChar(45)
   profile_image_url String?             @db.VarChar(100)
+  gender            String?             @db.VarChar(1)
   district          district            @relation(fields: [district_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_ibfk_1")
   post              post[]
   post_comment      post_comment[]
