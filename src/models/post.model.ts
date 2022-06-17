@@ -67,6 +67,120 @@ class PostModel {
             }
         });
     }
+
+    static get(last_post_id: number | null = null){
+        if(last_post_id == null){
+            // Start from the beginning
+            return prisma.post.findMany({
+                select: {
+                    uid: true,
+                    caption: true,
+                    user: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    post_media: {
+                        select: {
+                            url: true,
+                        }
+                    },
+                    post_comment: {
+                        orderBy: {
+                            created_at: "desc"
+                        },
+                        where:{
+                            is_delete: false
+                        },
+                        select: {
+                            user: {
+                                select: {
+                                    name: true,
+                                    profile_image_url: true
+                                }
+                            },
+                            comment: true
+                        },
+                        take: 5,
+                        skip: 0
+                    },
+                    reaction: {
+                        select: {
+                            id: true,
+                            created_by: true
+                        },
+                        where: {
+                            is_delete: false
+                        }
+                    }
+                },
+                orderBy: {
+                    created_at: "desc"
+                },
+                where: {
+                    is_delete: false
+                },
+                skip: 0,
+                take: 10
+            })
+        } else {
+            return prisma.post.findMany({
+                where: {
+                    id: {
+                        gt: last_post_id
+                    },
+                    is_delete: false
+                },
+                select: {
+                    uid: true,
+                    caption: true,
+                    user: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    post_media: {
+                        select: {
+                            url: true,
+                        }
+                    },
+                    post_comment: {
+                        orderBy: {
+                            created_at: "desc"
+                        },
+                        where:{
+                            is_delete: false
+                        },
+                        select: {
+                            user: {
+                                select: {
+                                    name: true,
+                                    profile_image_url: true
+                                }
+                            },
+                            comment: true
+                        },
+                        take: 5,
+                        skip: 0
+                    },
+                    reaction: {
+                        select: {
+                            id: true,
+                            created_by: true
+                        },
+                        where: {
+                            is_delete: false
+                        }
+                    }
+                },
+                orderBy: {
+                    created_at: "desc"
+                },
+                skip: 0,
+                take: 10
+            })
+        }
+    }
 }
 
 export default PostModel;

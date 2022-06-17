@@ -5,9 +5,10 @@ import { decode } from "jsonwebtoken";
 import { v4 } from "uuid";
 import PostMediaModel from "../models/post_media.model";
 import CommentModel from "../models/comment.model";
+import PostReactionModel from "../models/post_reaction.model";
 
 class socialMediaController {
-    static createPost = (req: Request, res: Response, next: NextFunction) => {
+    static createPost = (req: Request, res: Response) => {
         const files = req.files;
         const object = JSON.parse(JSON.stringify(req.body));
         const caption = object.caption;
@@ -61,7 +62,7 @@ class socialMediaController {
         })
     }
 
-    static deletePost = (req: Request, res: Response, next: NextFunction) => {
+    static deletePost = (req: Request, res: Response) => {
         const post_uid = req.params.postId;
         PostModel.getPostByUID(post_uid).then(post => {
             if(post == null || post.is_delete){
@@ -79,7 +80,7 @@ class socialMediaController {
         })
     }
 
-    static createComment = (req: Request, res: Response, next: NextFunction) => {
+    static createComment = (req: Request, res: Response) => {
         const post_uid = req.body.post_id;
         const comment = req.body.comment;
 
@@ -105,14 +106,70 @@ class socialMediaController {
         })
     }
 
-    static react = (req: Request, res: Response, next: NextFunction) => {
+    static react = (req: Request, res: Response) => {
         const post_uid = req.body.post_id;
         PostModel.getPostByUID(post_uid).then(post => {
             if(post == null || post.is_delete){
                 return res.status(404).send("Post tidak ditemukan.");
             } else {
-                
+                PostReactionModel.checkReaction(post.id, req.body.userId).then(reaction => {
+                    if(reaction == 0){
+                        // User has not react to this post
+                        const post_reaction = new PostReactionModel(post.id, req.body.userId);
+                        post_reaction.create().then(() => {
+                            return res.status(201).send("Reaksi berhasil dibuat.");
+                        }).catch(error => {
+                            console.error(`[error]: Gagal membuat reaksi ${new Date()}`);
+                            console.error(`[error]: ${error}`);
+
+                            return res.status(500).send(error);
+                        })
+                    } else {
+                        // User has react to this post
+                        const post_reaction = new PostReactionModel(post.id, req.body.userId);
+                        post_reaction.delete().then(() => {
+                            return res.status(201).send("Reaksi berhasil dihapus.");
+                        }).catch(error => {
+                            console.error(`[error]: Gagal menghapus reaksi ${new Date()}`);
+                            console.error(`[error]: ${error}`);
+
+                            return res.status(500).send(error);
+                        })
+                    }
+                })
             }
+        })
+    }
+
+    static fetch = (req: Request, res: Response) => {
+        const last_fetched = (!req.query.last_fetched_post) ? null : req.query.last_fetched_post.toString();
+        let post: any | null = null;
+        if(last_fetched != null){
+            PostModel.getPostByUID(last_fetched).then(last_post => {
+                post = last_post;
+            })
+        }
+
+        PostModel.get((post == null) ? null : post.id).then(posts => {
+            posts.forEach((x, index) => {
+                posts[index].post_media.forEach((media, i) => {
+                    posts[index].post_media[i].url = `${process.env.STORAGE_URL}${media.url}`
+                });
+
+                const post_reaction: any = {
+                    count: posts[index].reaction.length,
+                    has_reacted: posts[index].reaction.filter(x => x.created_by == req.body.userId).length == 0 ? false : true
+                }
+
+                posts[index].reaction = post_reaction;
+            })
+
+            return res.status(200).send(posts);
+        }).catch(error => {
+            console.error(`[error]: Memperoleh posts ${new Date()}`);
+            console.error(`[error]: ${error}`);
+
+            return res.status(500).send(error);
         })
     }
 }

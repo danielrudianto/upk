@@ -53,7 +53,7 @@ class authController {
         const district_id = parseInt(req.body.kelurahan_id);
         
         const _date_dob = (parseInt(nik.substring(6, 8)) > 40) ? (parseInt(nik.substring(6, 8)) - 40) : parseInt(nik.substring(6, 8));
-        const _gender = (parseInt(nik.substring(6, 8)) > 40) ? 2 : 1;
+        const _gender = (parseInt(nik.substring(6, 8)) > 40) ? "F" : "M";
         const _month_dob = parseInt(nik.substring(8, 10));
         const _year_dob = parseInt(nik.substring(10,12));
     
@@ -98,21 +98,27 @@ class authController {
             if(result.provinsi_id == _provinsi_id && result.kota_id == _city_id && result.kecamatan_id == _kecamatan_id){
                 const hashedPassword = await hash(password, 12);
                 if(result?.provinsi_id == _provinsi_id && result.kota_id == _city_id && result.kecamatan_id == _kecamatan_id){
-                    const user = new UserModel(name, nik, phone_number, district_id, hashedPassword);
+                    const user = new UserModel(name, nik, phone_number, district_id, hashedPassword, gender);
                     user.create().then(result => {
                         firebase.auth().createUser({
                             uid: result.uid,
                             phoneNumber: result.phone_number,
                             displayName: result.name,
                             password: password,
-                            disabled: false
+                            disabled: false,
                         }).then(() => {
                             return res.status(201).send("Pendaftaran pengguna berhasil.");
                         }).catch(error => {
+                            console.error(`[error]: Gagal registrasi - Firebase ${new Date()}`)
+                            console.error(`[error]: ${error}`);
+
                             return res.status(500).send(error);
                         })
                     }).catch(error => {
-                        res.status(500).send(error);
+                        console.error(`[error]: Gagal registrasi ${new Date()}`)
+                        console.error(`[error]: ${error}`);
+                        
+                        return res.status(500).send(error);
                     })
                 } else {
                     return res.status(500).send("Format NIK tidak dikenal. Mohon isikan lokasi sesuai dengan KTP terdaftar.");

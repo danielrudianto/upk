@@ -1,30 +1,13 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { BRI_service } from '../helper/bank.service';
+import SubscriptionController from '../controller/subscription.controller';
 
 const router = Router();
 const prisma = new PrismaClient();
 
 /* Route untuk menentukan biaya berlangganan dalam satuan Rupiah / bulan */
-router.get("/price", (req, res, next) => {
-    const date = new Date();
-    date.setDate(date.getDate() + 1);
-    date.setHours(0, 0, 0, 0);
-    prisma.subscription_price.findFirst({
-        where: {
-            effective_date: {
-                lte: date
-            }
-        },
-        orderBy: {
-            effective_date: "desc"
-        }
-    }).then(result => {
-        res.status(200).send(result);
-    }).catch(error => {
-        res.status(500).send(error);
-    })
-})
+router.get("/price", SubscriptionController.getPrice);
 
 // Checking user subscription status
 router.get("/", (req, res, next) => {
