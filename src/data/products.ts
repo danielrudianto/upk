@@ -12,7 +12,7 @@ export interface product {
 export const products: productGroup[] = [
     {
         group: "PLN",
-        logo: "/Path/to/PLN/Logo",
+        logo: "/public/PLN.png",
         children: [
             {
                 code_product: "PLNPASCH",
@@ -26,11 +26,11 @@ export const products: productGroup[] = [
     },
     {
         group: "Pulsa",
-        logo: "/Path/to/Pulsa/Logo",
+        logo: "/public/Credit.png",
         children: [
             {
                 group: "Indosat",
-                logo: "/Path/to/Indosat/Logo",
+                logo: "/public/Indosat.png",
                 children: [
                     {
                         code_product: "I5H",
@@ -56,7 +56,7 @@ export const products: productGroup[] = [
             },
             {
                 group: "Telkomsel",
-                logo: "/Path/to/Telkomsel/Logo",
+                logo: "/public/Telkomsel.png",
                 children: [
                     {
                         code_product: "S5H",
@@ -82,7 +82,7 @@ export const products: productGroup[] = [
             },
             {
                 group: "Axis / XL",
-                logo: "/Path/to/XL/Logo",
+                logo: "/public/XL.png",
                 children: [
                     {
                         code_product: "XR5H",

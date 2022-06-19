@@ -8,7 +8,7 @@ import { sign, verify } from "jsonwebtoken";
 import UserTokenModel from "../models/user_token.model";
 
 class authController {
-    static register = (req: Request, res: Response, next: NextFunction) => {
+    static register = (req: Request, res: Response) => {
         // Get the following data to proceed registration
         // 1. NIK
         // 2. Phone number (format: 08XXXXXXXX or 628XXXXXXX)
@@ -129,7 +129,7 @@ class authController {
         })
     }
 
-    static login = (req: Request, res: Response, next: NextFunction) => {
+    static login = (req: Request, res: Response) => {
         //
         //    Get the following data to proceed login
         //    1. Phone number
@@ -190,7 +190,7 @@ class authController {
         })
     }
 
-    static register_token = (req: Request, res: Response, next: NextFunction) => {
+    static register_token = (req: Request, res: Response) => {
         const token = req.body.token;
         const userId = req.body.userId;
 
