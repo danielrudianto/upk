@@ -1,7 +1,7 @@
 export interface productGroup {
     group: string;
     logo: string;
-    children: productGroup[] | product[];
+    children?: productGroup[] | product[];
 }
 
 export interface product {

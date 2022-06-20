@@ -31,7 +31,7 @@ const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 app.use("/auth", authRoutes);
 app.use("/district", districtRoutes);
 
-app.use("/post", postRoutes);
+app.use("/post", authMiddleware, postRoutes);
 app.use("/comment", authMiddleware, commentRoutes);
 
 app.use("/product", productRoutes);
@@ -40,6 +40,7 @@ app.use('/payment', paymentRoutes);
 
 app.listen(port, () => {
   console.log(`[server] Server is running at https://localhost:${port}`);
+  
   // Referesh Banking token
   BRI_service.scheduleRefreshBRIToken();
 });

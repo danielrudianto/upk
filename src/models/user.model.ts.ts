@@ -54,9 +54,6 @@ class UserModel {
                 nik: true,
                 phone_number: true
             }
-        }).catch(error => {
-            console.error(error);
-            throw Error(error);
         })
     }
 

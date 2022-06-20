@@ -78,8 +78,8 @@ model user_subscription {
   service                                          Decimal        @default(0.00) @db.Decimal(12, 2)
   created_by                                       Int
   created_at                                       DateTime       @default(now()) @db.DateTime(0)
-  valid_from                                       DateTime?      @db.Date
-  valid_until                                      DateTime?      @db.Date
+  valid_from                                       DateTime       @db.Date
+  valid_until                                      DateTime       @db.Date
   is_paid                                          Boolean        @default(false)
   paid_at                                          DateTime?      @db.DateTime(0)
   payment_id                                       String?        @db.VarChar(100)

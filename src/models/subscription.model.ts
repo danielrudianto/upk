@@ -16,7 +16,7 @@ class SubscriptionModel {
     payment_id: string | null = null;
     payment_method: number;
 
-    constructor(price: number, membership: number, service: number, created_by: number, valid_from: Date, valid_until: Date, payment_method: number){
+    constructor(price: number = 0, membership: number = 0, service: number = 0, created_by: number, valid_from: Date, valid_until: Date, payment_method: number){
         this.price = price;
         this.membership = membership;
         this.service = service;
@@ -44,7 +44,8 @@ class SubscriptionModel {
     static checkSubscription(user_id: number){
         return prisma.user_subscription.findFirst({
             where: {
-                is_paid: true
+                is_paid: true,
+                created_by: user_id
             },
             select: {
                 valid_until: true
