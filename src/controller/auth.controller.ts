@@ -210,7 +210,7 @@ class authController {
         })
     }
 
-    static register_token = (req: Request, res: Response, next: NextFunction) => {
+    static register_token = (req: Request, res: Response) => {
         const token = req.body.token;
         const userId = req.body.userId;
 

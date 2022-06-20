@@ -24,7 +24,7 @@ let JSONParser = bodyParser.json();
 let urlencodedParser = bodyParser.urlencoded({ extended: false });
 
 app.use(JSONParser, urlencodedParser);
-app.use(express.static('temp'));
+app.use('/public', express.static(__dirname + '/public'));
 
 const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 

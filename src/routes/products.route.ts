@@ -1,13 +1,12 @@
 import { Router } from 'express';
-import { product, productGroup, products } from '../products'
-import { PrismaClient } from "@prisma/client";
-import axios from 'axios';
 import ProductController from '../controller/product.controller';
+import { param } from 'express-validator';
 
 const router = Router();
 
 router.get(
     "/getByCodeName/:codeName", 
+    param("codeName").not().isEmpty(), 
     ProductController.getByCodeName
 );
 
