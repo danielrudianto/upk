@@ -1,47 +1,34 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
-
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const client_1 = require("@prisma/client");
+const prisma = new client_1.PrismaClient();
 class SubscriptionModel {
-    id?: number;
-    price: number;
-    membership: number;
-    service: number;
-    created_by: number;
-    created_at: Date;
-    valid_from: Date;
-    valid_until: Date;
-    is_paid: boolean;
-    paid_at: Date | null = null;
-    payment_id: string | null = null;
-    payment_method: number;
-
-    constructor(price: number = 0, membership: number = 0, service: number = 0, created_by: number, valid_from: Date, valid_until: Date, payment_method: number){
+    constructor(price = 0, membership = 0, service = 0, created_by, valid_from, valid_until, payment_method) {
+        this.paid_at = null;
+        this.payment_id = null;
         this.price = price;
         this.membership = membership;
         this.service = service;
         this.created_by = created_by;
         this.created_at = new Date(),
-        this.valid_from = valid_from;
+            this.valid_from = valid_from;
         this.valid_until = valid_until;
         this.is_paid = false;
         this.payment_method = payment_method;
     }
-    
-    static checkPrice(date: Date = new Date()){
+    static checkPrice(date = new Date()) {
         return prisma.subscription_price.findFirst({
             orderBy: {
                 effective_date: "desc"
             },
-            where:{
+            where: {
                 effective_date: {
                     lte: date
                 }
             }
         });
     }
-
-    static checkSubscription(user_id: number){
+    static checkSubscription(user_id) {
         return prisma.user_subscription.findFirst({
             where: {
                 is_paid: true,
@@ -55,8 +42,7 @@ class SubscriptionModel {
             },
         });
     }
-
-    create(){
+    create() {
         return prisma.user_subscription.create({
             data: {
                 created_by: this.created_by,
@@ -70,8 +56,7 @@ class SubscriptionModel {
                 payment_id: null,
                 payment_method: this.payment_method
             }
-        })
+        });
     }
 }
-
-export default SubscriptionModel;
+exports.default = SubscriptionModel;

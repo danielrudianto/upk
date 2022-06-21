@@ -5,10 +5,11 @@ import { authMiddleware } from "../helper/auth.helper";
 
 const router = Router();
 
-router.post("/", 
+router.post(
+    "/", 
     authMiddleware, 
-    body("comment").not().isEmpty().withMessage("Mohon isikan kolom komentar."),
-    body("post_uid").not().isEmpty().withMessage("Mohon isikan ID post."),
+    body('post_id').not().isEmpty().withMessage("Mohon pilih post yang akan dikomentari."),
+    body('comment').not().isEmpty().withMessage("Kolom komentar tidak boleh kosong."),
     socialMediaController.createComment);
 
 export default router;

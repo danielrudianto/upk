@@ -6,6 +6,7 @@ import { v4 } from "uuid";
 import PostMediaModel from "../models/post_media.model";
 import CommentModel from "../models/comment.model";
 import PostReactionModel from "../models/post_reaction.model";
+import { validationResult } from "express-validator";
 
 class socialMediaController {
     static createPost = (req: Request, res: Response) => {
@@ -46,12 +47,13 @@ class socialMediaController {
                         post_media.create().then(() => {
                             // fs.unlinkSync(path);
                         }).catch(error => {
-                            console.error(`[error]: Hapus file terunggah ${new Date()}`);
+                            console.error(`[error]: Error on deleting local file ${new Date()}`);
                             console.error(`[error]: ${error}`);
                         })
                     }).catch(error => {
-                        console.error(`[error]: Mengunggah file ${new Date()}`);
+                        console.error(`[error]: Error on uploading file to firebase ${new Date()}`);
                         console.error(`[error]: ${error}`);
+
                         return res.status(500).send(`Media ${file_name} gagal terunggah.`);
                     });
                 }
@@ -81,6 +83,15 @@ class socialMediaController {
     }
 
     static createComment = (req: Request, res: Response) => {
+        const val_result = validationResult(req);
+        if(!val_result.isEmpty()){
+            return res.status(500).send(val_result.array()[0].msg);
+        }
+
+        //    Get the following data to proceed comment
+        //    1. Post UID
+        //    2. Comment
+
         const post_uid = req.body.post_id;
         const comment = req.body.comment;
 
@@ -119,7 +130,7 @@ class socialMediaController {
                         post_reaction.create().then(() => {
                             return res.status(201).send("Reaksi berhasil dibuat.");
                         }).catch(error => {
-                            console.error(`[error]: Gagal membuat reaksi ${new Date()}`);
+                            console.error(`[error]: Failed createing reaction ${new Date()}`);
                             console.error(`[error]: ${error}`);
 
                             return res.status(500).send(error);
@@ -130,7 +141,7 @@ class socialMediaController {
                         post_reaction.delete().then(() => {
                             return res.status(201).send("Reaksi berhasil dihapus.");
                         }).catch(error => {
-                            console.error(`[error]: Gagal menghapus reaksi ${new Date()}`);
+                            console.error(`[error]: Failed deleting reaction ${new Date()}`);
                             console.error(`[error]: ${error}`);
 
                             return res.status(500).send(error);
@@ -151,14 +162,14 @@ class socialMediaController {
         }
 
         PostModel.get((post == null) ? null : post.id).then(posts => {
-            posts.forEach((x, index) => {
+            posts.forEach((post, index) => {
                 posts[index].post_media.forEach((media, i) => {
                     posts[index].post_media[i].url = `${process.env.STORAGE_URL}${media.url}`
                 });
 
                 const post_reaction: any = {
-                    count: posts[index].reaction.length,
-                    has_reacted: posts[index].reaction.filter(x => x.created_by == req.body.userId).length == 0 ? false : true
+                    count: post.reaction.length,
+                    has_reacted: post.reaction.filter(x => x.created_by == req.body.userId).length == 0 ? false : true
                 }
 
                 posts[index].reaction = post_reaction;
@@ -166,7 +177,7 @@ class socialMediaController {
 
             return res.status(200).send(posts);
         }).catch(error => {
-            console.error(`[error]: Memperoleh posts ${new Date()}`);
+            console.error(`[error]: Fetching posts ${new Date()}`);
             console.error(`[error]: ${error}`);
 
             return res.status(500).send(error);

@@ -13,7 +13,8 @@ import commentRoutes from './routes/comment.route';
 import productRoutes from './routes/products.route';
 import transactionRoutes from './routes/transaction.route';
 import paymentRoutes from './routes/payment.route';
-import { hash, hashSync } from 'bcrypt';
+import managementRoutes from './routes/management.route';
+
 import { authMiddleware } from './helper/auth.helper';
 
 dotenv.config();
@@ -31,15 +32,18 @@ const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 app.use("/auth", authRoutes);
 app.use("/district", districtRoutes);
 
-app.use("/post", postRoutes);
+app.use("/post", authMiddleware, postRoutes);
 app.use("/comment", authMiddleware, commentRoutes);
 
 app.use("/product", productRoutes);
 app.use('/transaction', transactionRoutes);
 app.use('/payment', paymentRoutes);
 
+app.use('/management', managementRoutes);
+
 app.listen(port, () => {
   console.log(`[server] Server is running at https://localhost:${port}`);
+  
   // Referesh Banking token
   BRI_service.scheduleRefreshBRIToken();
 });

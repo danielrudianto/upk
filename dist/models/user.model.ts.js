@@ -1,38 +1,23 @@
-import { PrismaClient } from "@prisma/client";
-import { v4 } from "uuid";
-import DistrictModel from "./district.model";
-
-const prisma = new PrismaClient();
-
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const client_1 = require("@prisma/client");
+const uuid_1 = require("uuid");
+const prisma = new client_1.PrismaClient();
 class UserModel {
-    id?: number | null;
-    name: string;
-    nik: string;
-    phone_number: string;
-    district_id: number;
-    password?: string;
-    uid?: string;
-    profile_image_url?: string | null;
-    created_at?: Date;
-    gender: string;
-
-    district?: DistrictModel;
-
-    constructor(name: string, nik: string, phone_number: string, district_id: number, password: string, gender: string) {
+    constructor(name, nik, phone_number, district_id, password, gender) {
         this.name = name;
         this.nik = nik;
         this.phone_number = phone_number;
         this.district_id = district_id;
         this.password = password;
         this.profile_image_url = null;
-        this.uid = v4();
+        this.uid = (0, uuid_1.v4)();
         this.created_at = new Date();
         this.gender = gender;
     }
-
     create() {
         return prisma.user.create({
-            data: this as any,
+            data: this,
             select: {
                 uid: true,
                 name: true,
@@ -41,9 +26,8 @@ class UserModel {
             }
         });
     }
-
     /* Get a user by Nomor Induk Kependudukan number */
-    static getUserByNIK(nik: string) {
+    static getUserByNIK(nik) {
         return prisma.user.findUnique({
             where: {
                 nik: nik
@@ -54,11 +38,10 @@ class UserModel {
                 nik: true,
                 phone_number: true
             }
-        })
+        });
     }
-
     /* Get a user by phone number */
-    static getUserByPhoneNumber(phone_number: string) {
+    static getUserByPhoneNumber(phone_number) {
         return prisma.user.findUnique({
             where: {
                 phone_number: phone_number
@@ -75,11 +58,10 @@ class UserModel {
                 },
                 password: true
             }
-        })
+        });
     }
-
     /* Get a user by ID */
-    static getUserById(id: number) {
+    static getUserById(id) {
         return prisma.user.findUnique({
             where: {
                 id: id
@@ -96,8 +78,7 @@ class UserModel {
                 },
                 password: true
             }
-        })
+        });
     }
 }
-
-export default UserModel;
+exports.default = UserModel;

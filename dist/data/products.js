@@ -1,15 +1,7 @@
-export interface productGroup {
-    group: string;
-    logo: string;
-    children?: productGroup[] | product[];
-}
-
-export interface product {
-    code_product: string;
-    description: string
-}
-
-export const products: productGroup[] = [
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.products = void 0;
+exports.products = [
     {
         group: "PLN",
         logo: "/public/PLN.png",
@@ -35,7 +27,7 @@ export const products: productGroup[] = [
                     {
                         code_product: "I5H",
                         description: "Indosat IM3 / Mentari 5 ribu"
-                    }, 
+                    },
                     {
                         code_product: "I10H",
                         description: "Indosat IM3 / Mentari 10 ribu"
@@ -47,7 +39,7 @@ export const products: productGroup[] = [
                     {
                         code_product: "I50H",
                         description: "Indosat IM3 / Mentari 50 ribu"
-                    }, 
+                    },
                     {
                         code_product: "I100H",
                         description: "Indosat IM3 / Mentari 100 ribu"
@@ -118,4 +110,4 @@ export const products: productGroup[] = [
             }
         ]
     }
-]
+];
