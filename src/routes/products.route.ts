@@ -15,7 +15,6 @@ router.get(
 
 router.get("/:groupName/:childGroupName", (req, res, next) => {
     try {
-        const result: any[] = [];
         const groupIndex = products.findIndex(x => x.group == req.params.groupName);
         if(groupIndex >= 0){
             // Group exist
