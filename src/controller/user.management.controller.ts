@@ -31,6 +31,7 @@ class ManagementController {
         // TODO
         // Check whether the user is able to approve this request or not
     }
+    
 }
 
 export default ManagementController;

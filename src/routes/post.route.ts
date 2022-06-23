@@ -6,7 +6,7 @@ import fs from 'fs';
 import { authMiddleware } from '../helper/auth.helper';
 import upload from '../helper/upload.helper.ts';
 import socialMediaController from '../controller/social_media.controller';
-import { query } from 'express-validator';
+import { body, query } from 'express-validator';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -30,6 +30,7 @@ router.delete(
 
 router.post(
     "/reaction", 
+    body("post_uid").not().isEmpty().withMessage("Mohon isikan post UID."),
     socialMediaController.react
 );
 

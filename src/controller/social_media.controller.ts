@@ -9,7 +9,7 @@ import PostReactionModel from "../models/post_reaction.model";
 import { validationResult } from "express-validator";
 
 class socialMediaController {
-    static createPost = (req: Request, res: Response) => {
+    static createPost = (req: Request, res: Response) => {        
         const files = req.files;
         const object = JSON.parse(JSON.stringify(req.body));
         const caption = object.caption;
@@ -58,7 +58,7 @@ class socialMediaController {
                     });
                 }
 
-                return res.status(201).send("Upload post berhasil.");
+                return res.status(201).send(result);
             }
             
         })
@@ -92,7 +92,7 @@ class socialMediaController {
         //    1. Post UID
         //    2. Comment
 
-        const post_uid = req.body.post_id;
+        const post_uid = req.body.post_uid;
         const comment = req.body.comment;
 
         PostModel.getPostByUID(post_uid).then(result => {
@@ -118,7 +118,12 @@ class socialMediaController {
     }
 
     static react = (req: Request, res: Response) => {
-        const post_uid = req.body.post_id;
+        const val_result = validationResult(req);
+        if(!val_result.isEmpty()){
+            return res.status(500).send(val_result.array()[0].msg);
+        }
+        
+        const post_uid = req.body.post_uid;
         PostModel.getPostByUID(post_uid).then(post => {
             if(post == null || post.is_delete){
                 return res.status(404).send("Post tidak ditemukan.");

@@ -8,7 +8,7 @@ const router = Router();
 router.post(
     "/", 
     authMiddleware, 
-    body('post_id').not().isEmpty().withMessage("Mohon pilih post yang akan dikomentari."),
+    body('post_uid').not().isEmpty().withMessage("Mohon pilih post yang akan dikomentari."),
     body('comment').not().isEmpty().withMessage("Kolom komentar tidak boleh kosong."),
     socialMediaController.createComment);
 

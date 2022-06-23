@@ -10,16 +10,18 @@ class SubscriptionController {
                 if(user_subscription == null){
                     // User has never paid the first subscription
                     return res.status(200).send({
-                        price: result?.price,
-                        membership: result?.membership,
-                        service: result?.service
+                        price: parseFloat(result!.price!.toString()),
+                        membership: parseFloat(result!.membership.toString()),
+                        service: parseFloat(result!.service.toString()),
+                        effective_date: result?.effective_date
                     })
                 } else {
                     // User has paid the first subscription
                     return res.status(200).send({
                         price: 0,
                         membership: result?.membership,
-                        service: result?.service
+                        service: result?.service,
+                        effective_date: result?.effective_date
                     })
                 }
             }).catch(error => {
@@ -28,7 +30,6 @@ class SubscriptionController {
 
                 return res.status(500).send(error);
             })
-            return res.status(200).send(result);
         }).catch(error => {
             console.error(`[error]: Fetching subscription price ${new Date()}`)
             console.error(`[error]: ${error}`);
@@ -98,7 +99,7 @@ class SubscriptionController {
                     })
                 } else {
                     // User has paid the first subscription
-                    const subscriptionDate = user_subscription.valid_until;
+                    const subscriptionDate = user_subscription.valid_until!;
                     subscriptionDate.setDate(subscriptionDate.getDate() + 1);
 
                     const subscriptionExpireDate = subscriptionDate;

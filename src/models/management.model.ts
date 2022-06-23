@@ -32,6 +32,22 @@ class UserManagementModel{
             }
         });
     }
+
+    static fetchById(id: number){
+        return prisma.user_management.findUnique({
+            where:{
+                id: id
+            },
+            select: {
+                district: {
+                    select: {
+                        name: true
+                    }
+                },
+                management_level: true,
+            }
+        })
+    }
 }
 
 export default UserManagementModel;

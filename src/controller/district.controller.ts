@@ -44,7 +44,7 @@ class DistrictController {
                 return res.status(404).send("Provinsi tidak ditemukan.");
             }
 
-            DistrictModel.getCity(keyword, district.provinsi_id).then(result => {
+            DistrictModel.getCity(keyword, district.provinsi_id!).then(result => {
                 return res.status(200).send(result);
             }).catch(error => {
                 console.error(`[error]: Get city autocomplete ${new Date()}`);
@@ -76,7 +76,7 @@ class DistrictController {
                 return res.status(404).send("Kota tidak ditemukan.");
             }
 
-            DistrictModel.getKecamatan(keyword, district.provinsi_id, district.kota_id!).then(result => {
+            DistrictModel.getKecamatan(keyword, district.provinsi_id!, district.kota_id!).then(result => {
                 return res.status(200).send(result);
             }).catch(error => {
                 console.error(`[error]: Get kecamatan autocomplete ${new Date()}`);
@@ -108,7 +108,7 @@ class DistrictController {
                 return res.status(404).send("Kecamatan tidak ditemukan.");
             }
 
-            DistrictModel.getKelurahan(keyword, district.provinsi_id, district.kota_id!, district.kecamatan_id!).then(result => {
+            DistrictModel.getKelurahan(keyword, district.provinsi_id!, district.kota_id!, district.kecamatan_id!).then(result => {
                 return res.status(200).send(result);
             }).catch(error => {
                 console.error(`[error]: Get kelurahan autocomplete ${new Date()}`);

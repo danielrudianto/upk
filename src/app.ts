@@ -14,6 +14,7 @@ import productRoutes from './routes/products.route';
 import transactionRoutes from './routes/transaction.route';
 import paymentRoutes from './routes/payment.route';
 import managementRoutes from './routes/management.route';
+import subscriptionRoutes from './routes/subscription.route';
 
 import { authMiddleware } from './helper/auth.helper';
 
@@ -38,6 +39,7 @@ app.use("/comment", authMiddleware, commentRoutes);
 app.use("/product", productRoutes);
 app.use('/transaction', transactionRoutes);
 app.use('/payment', paymentRoutes);
+app.use('/membership', subscriptionRoutes);
 
 app.use('/management', managementRoutes);
 

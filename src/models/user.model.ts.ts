@@ -73,7 +73,25 @@ class UserModel {
                         name: true
                     }
                 },
-                password: true
+                password: true,
+                role: true,
+                user_management: {
+                    select: {
+                        district: {
+                            select: {
+                                name: true,
+                                provinsi_id: true,
+                                kota_id: true,
+                                kecamatan_id: true,
+                                kelurahan_id: true
+                            }
+                        },
+                        management_level: true
+                    },
+                    where:{
+                        is_approved: true
+                    }
+                }
             }
         })
     }

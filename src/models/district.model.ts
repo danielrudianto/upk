@@ -26,7 +26,10 @@ class DistrictModel {
                 },
                 kota_id: null,
                 kecamatan_id: null,
-                kelurahan_id: null
+                kelurahan_id: null,
+                provinsi_id: {
+                    not: null
+                }
             },
             select: {
                 id: true,
@@ -51,7 +54,7 @@ class DistrictModel {
                     kota_id: null
                 },
                 kecamatan_id: null,
-                kelurahan_id: null
+                kelurahan_id: null,
             },
             select: {
                 id: true,

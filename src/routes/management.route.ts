@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { body } from "express-validator";
-import ManagementController from "../controller/user.management.model";
+import ManagementController from "../controller/user.management.controller";
 
 const router = Router();
 
