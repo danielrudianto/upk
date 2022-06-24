@@ -1,9 +1,9 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
-import { BRI_service } from './helper/bank.service';
 
-import { initializeApp } from 'firebase-admin/app';
+// import { BRI_service } from './helper/bank.service';
+// import { initializeApp } from 'firebase-admin/app';
 
 import authRoutes from './routes/auth.route';
 import districtRoutes from './routes/district.route';
@@ -15,8 +15,7 @@ import transactionRoutes from './routes/transaction.route';
 import paymentRoutes from './routes/payment.route';
 import managementRoutes from './routes/management.route';
 import subscriptionRoutes from './routes/subscription.route';
-
-import { authMiddleware } from './helper/auth.helper';
+import authHelper from './helper/auth.helper';
 
 dotenv.config();
 
@@ -33,19 +32,19 @@ const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 app.use("/auth", authRoutes);
 app.use("/district", districtRoutes);
 
-app.use("/post", authMiddleware, postRoutes);
-app.use("/comment", authMiddleware, commentRoutes);
+app.use("/post", authHelper.authMiddleware, postRoutes);
+app.use("/comment", authHelper.authMiddleware, commentRoutes);
 
-app.use("/product", productRoutes);
-app.use('/transaction', transactionRoutes);
-app.use('/payment', paymentRoutes);
-app.use('/membership', subscriptionRoutes);
+app.use("/product", authHelper.authMiddleware, productRoutes);
+app.use('/transaction', authHelper.authMiddleware, transactionRoutes);
+app.use('/payment', authHelper.authMiddleware, paymentRoutes);
+app.use('/membership', authHelper.authMiddleware, subscriptionRoutes);
 
-app.use('/management', managementRoutes);
+app.use('/management', authHelper.authMiddleware, managementRoutes);
 
 app.listen(port, () => {
   console.log(`[server] Server is running at https://localhost:${port}`);
   
   // Referesh Banking token
-  BRI_service.scheduleRefreshBRIToken();
+  // BRI_service.scheduleRefreshBRIToken();
 });

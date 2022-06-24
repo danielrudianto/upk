@@ -24,8 +24,8 @@ router.post("/", async (req, res, next) => {
   const paymentMethod = parseInt(req.body.payment_method);
   const purchaseReference = req.body.purchase_reference;
 
-  // When purchasing PLN, the purchase_reference is refered as PLN Customer number 
-  // When purchasing BPJS, the purchase_reference is refered as BPJS Customer number 
+  // When purchasing PLN, the purchase_reference is refered as PLN Customer number
+  // When purchasing BPJS, the purchase_reference is refered as BPJS Customer number
   // When purchasing Phone bill, the purchase_reference is refered as Customer's phone number
 
   /* Check availble payment */
@@ -71,15 +71,15 @@ router.post("/", async (req, res, next) => {
               user: {
                 select: {
                   id: true,
-                  name: true
-                }
+                  name: true,
+                },
               },
               value: true,
               service: true,
               discount: true,
               purchase_reference: true,
-              id: true
-            }
+              id: true,
+            },
           })
           .then((result) => {
             // TODO Create Virtual account based on payment method
@@ -87,16 +87,33 @@ router.post("/", async (req, res, next) => {
             const discount = parseFloat(result.discount.toString());
             const service = parseFloat(result.service.toString());
             const expired = new Date();
-            expired.setHours(expired.getHours(), expired.getMinutes() + 30, expired.getSeconds(), expired.getMilliseconds());
+            expired.setHours(
+              expired.getHours(),
+              expired.getMinutes() + 30,
+              expired.getSeconds(),
+              expired.getMilliseconds()
+            );
 
             switch (payment.id) {
-              case 1: 
+              case 1:
                 // Create BRI Virtual Account
-                BRI_service.createVirtualAccount(result.user.id.toString().padStart(10, "0"), result.user.name, (value + service - discount), `Transaksi AbangKu #${result.id}`, expired).then(result => {
-                  console.log(result.data);
-                }).catch(error => {
-                  res.status(500).send("Gagal membuat billing, mohon coba kembali dalam beberapa saat.");
-                })
+                BRI_service.createVirtualAccount(
+                  result.user.id.toString().padStart(10, "0"),
+                  result.user.name,
+                  value + service - discount,
+                  `Transaksi AbangKu #${result.id}`,
+                  expired
+                )
+                  .then((result) => {
+                    console.log(result.data);
+                  })
+                  .catch((error) => {
+                    res
+                      .status(500)
+                      .send(
+                        "Gagal membuat billing, mohon coba kembali dalam beberapa saat."
+                      );
+                  });
                 break;
             }
           })
@@ -116,7 +133,6 @@ router.post("/", async (req, res, next) => {
 
 router.delete("/:transactionId", (req, res, next) => {
   const id = parseInt(req.params.transactionId);
-
-})
+});
 
 export default router;

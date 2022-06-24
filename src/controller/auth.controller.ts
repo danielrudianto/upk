@@ -304,6 +304,14 @@ class authController {
               );
           }
 
+          if (
+            management == null ||
+            !management.is_approved ||
+            management.is_delete
+          ) {
+            return res.status(403).send("Status kepengurusan tidak ditemukan.");
+          }
+
           const expiration = new Date();
           expiration.setTime(
             expiration.getTime() +
@@ -321,7 +329,7 @@ class authController {
             },
             process.env.TOKEN_KEY!,
             {
-              expiresIn: `24h`,
+              expiresIn: `${parseInt(process.env.expiration!)}h`,
             }
           );
 
@@ -330,11 +338,12 @@ class authController {
             expiration: expiration.getTime(),
             user: {
               name: user.name,
+              uid: user.uid,
               district: user.district.name,
               phone_number: user.phone_number,
               nik: user.nik,
               role: user.role,
-              user_management: management
+              user_management: management,
             },
           });
         })
