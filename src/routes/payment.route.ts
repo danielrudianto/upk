@@ -10,6 +10,10 @@ router.get(
     PaymentController.getMethods
 );
 
+router.post("/proof",
+    PaymentController.createProof
+)
+
 router.get("/", (req, res, next) => {
     /*
         Get history of payment of a user

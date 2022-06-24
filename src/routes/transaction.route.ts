@@ -2,14 +2,13 @@ import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import axios from "axios";
 import BRI_service from "../helper/bank.service";
+import TransactionController from "../controller/transaction.controller";
 
 const router = Router();
 const prisma = new PrismaClient();
 
 
-router.get("/", (req, res, next) => {
-  /* Route to get historical transactions */
-});
+router.get("/", TransactionController.fetch);
 
 router.post("/", async (req, res, next) => {
   /*
@@ -65,7 +64,6 @@ router.post("/", async (req, res, next) => {
               service: parseInt(process.env.ADMINISTRATION_FEE!),
               discount: parseFloat(result.data.KOMISI),
               product_code_name: productCodeName,
-              branch_transaction: branchTransaction,
               payment_method_id: paymentMethod,
               purchase_reference: purchaseReference,
             },
