@@ -36,19 +36,22 @@ model post {
 }
 
 model post_comment {
-  id         Int        @id @default(autoincrement())
-  comment    String     @db.Text
-  created_by Int
-  created_at DateTime   @default(now()) @db.DateTime(0)
-  post_id    Int?
-  deleted_at DateTime?  @db.DateTime(0)
-  is_delete  Boolean?   @default(false)
-  user       user       @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "post_comment_ibfk_2")
-  post       post?      @relation(fields: [post_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "post_comment_ibfk_1")
-  reaction   reaction[]
+  id          Int        @id @default(autoincrement())
+  comment     String     @db.Text
+  created_by  Int
+  created_at  DateTime   @default(now()) @db.DateTime(0)
+  post_id     Int?
+  deleted_at  DateTime?  @db.DateTime(0)
+  is_delete   Boolean?   @default(false)
+  district_id Int?
+  user        user       @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "post_comment_ibfk_2")
+  district    district?  @relation(fields: [district_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "post_comment_ibfk_3")
+  post        post?      @relation(fields: [post_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "post_comment_ibfk_1")
+  reaction    reaction[]
 
   @@index([post_id], map: "post_comment_ibfk_1_idx")
   @@index([created_by], map: "post_comment_ibfk_2_idx")
+  @@index([district_id], map: "post_comment_ibfk_3_idx")
 }
 
 model user {
@@ -79,23 +82,23 @@ model user {
 }
 
 model user_subscription {
-  id                                               Int            @id @default(autoincrement())
-  price                                            Decimal        @default(0.00) @db.Decimal(12, 2)
-  membership                                       Decimal        @default(0.00) @db.Decimal(12, 2)
-  service                                          Decimal        @default(0.00) @db.Decimal(12, 2)
-  created_by                                       Int
-  created_at                                       DateTime       @default(now()) @db.DateTime(0)
-  valid_from                                       DateTime?      @db.Date
-  valid_until                                      DateTime?      @db.Date
-  is_paid                                          Boolean        @default(false)
-  paid_at                                          DateTime?      @db.DateTime(0)
-  payment_id                                       String?        @db.VarChar(100)
-  payment_method                                   Int
-  user                                             user           @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_subscription_ibfk_1")
-  payment_method_payment_methodTouser_subscription payment_method @relation(fields: [payment_method], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_subscription_ibfk_2")
+  id                Int            @id @default(autoincrement())
+  price             Decimal        @default(0.00) @db.Decimal(12, 2)
+  membership        Decimal        @default(0.00) @db.Decimal(12, 2)
+  service           Decimal        @default(0.00) @db.Decimal(12, 2)
+  created_by        Int
+  created_at        DateTime       @default(now()) @db.DateTime(0)
+  valid_from        DateTime?      @db.Date
+  valid_until       DateTime?      @db.Date
+  is_paid           Boolean        @default(false)
+  paid_at           DateTime?      @db.DateTime(0)
+  payment_id        String?        @db.VarChar(100)
+  payment_method_id Int
+  user              user           @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_subscription_ibfk_1")
+  payment_method    payment_method @relation(fields: [payment_method_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_subscription_ibfk_2")
 
   @@index([created_by], map: "user_subscription_ibfk_1_idx")
-  @@index([payment_method], map: "user_subscription_ibfk_2_idx")
+  @@index([payment_method_id], map: "user_subscription_ibfk_2_idx")
 }
 
 model user_token {
@@ -133,15 +136,17 @@ model user_transaction {
 }
 
 model district {
-  id              Int               @id @default(autoincrement())
-  provinsi_id     String?           @db.VarChar(2)
-  kota_id         String?           @db.VarChar(2)
-  kecamatan_id    String?           @db.VarChar(2)
-  kelurahan_id    String?           @db.VarChar(4)
-  name            String            @db.VarChar(100)
-  post            post[]
-  user            user[]
-  user_management user_management[]
+  id                Int               @id @default(autoincrement())
+  provinsi_id       String?           @db.VarChar(2)
+  kota_id           String?           @db.VarChar(2)
+  kecamatan_id      String?           @db.VarChar(2)
+  kelurahan_id      String?           @db.VarChar(4)
+  name              String            @db.VarChar(100)
+  profile_image_url String?           @db.VarChar(100)
+  post              post[]
+  post_comment      post_comment[]
+  user              user[]
+  user_management   user_management[]
 
   @@index([name], map: "district_fulltext")
   @@index([provinsi_id, kota_id, kecamatan_id, kelurahan_id], map: "district_index")
