@@ -19,6 +19,7 @@ class TransactionModel {
   payment_reference: string | null;
   note: string;
   district_id: number | null;
+  payment_expired_date: Date;
 
   constructor(
     created_by: number,
@@ -51,6 +52,11 @@ class TransactionModel {
     this.is_paid = false;
     this.paid_at = null;
     this.payment_reference = null;
+
+    const date = this.created_at;
+    date.setHours(date.getHours() + parseInt(process.env.PAYMENT_EXPIRE!));
+
+    this.payment_expired_date = date;
   }
 
   create() {
@@ -71,6 +77,7 @@ class TransactionModel {
         payment_reference: this.payment_reference,
         created_by: this.created_by,
         created_at: this.created_at,
+        payment_expired_date: this.payment_expired_date
       },
       select: {
         id: true,
@@ -446,6 +453,17 @@ class TransactionModel {
     } else {
       throw Error("Request tidak valid.");
     }
+  }
+
+  static checkRunningTransaction(user_id: number){
+    return prisma.user_transaction.count({
+      where:{
+        payment_expired_date: {
+          lt: new Date()
+        },
+        is_paid: false
+      }
+    })
   }
 }
 

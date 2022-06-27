@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-class PaymentProof {
+class PaymentProofModel {
     id?: number;
     user_subscription_id: number | null;
     user_transaction_id: number | null;
@@ -36,4 +36,4 @@ class PaymentProof {
     }
 }
 
-export default PaymentProof;
+export default PaymentProofModel;

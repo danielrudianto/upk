@@ -26,6 +26,28 @@ class PaymentModel {
           }
         })
     }
+
+    static fetchUnconfirmedMembershipPayment(offset: number, limit: number){
+      return prisma.$transaction([
+        prisma.user_subscription.findMany({
+          where:{
+            is_paid: false
+          },
+          include: {
+            payment_proof: {
+              select: {
+                url: true,
+              }
+            }
+          }
+        }),
+        prisma.user_subscription.count({
+          where:{
+            is_paid: false
+          }
+        })
+      ])
+    }
 }
 
 export default PaymentModel;
