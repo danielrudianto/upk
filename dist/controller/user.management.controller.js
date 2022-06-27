@@ -21,27 +21,48 @@ ManagementController.submission = (req, res) => {
     // TODO
     // Validation
     const user_management = new management_model_1.default(user_id, management_level, district_id);
-    user_management.create().then(result => {
+    user_management
+        .create()
+        .then((result) => {
         return res.status(201).send(result);
-    }).catch(error => {
+    })
+        .catch((error) => {
+        console.error(`[error]: Error creating user management ${new Date()}`);
+        console.error(`[error]: ${error}`);
         return res.status(500).send(error);
     });
 };
 ManagementController.approve = (req, res) => {
     const user_id = req.body.userId;
     const id = req.body.id;
-    management_model_1.default.fetchById(id).then(submission => {
+    management_model_1.default.fetchById(id)
+        .then((submission) => {
         if (submission == null) {
-            return res.status(404).send("Pengajuan kepengurusan tidak ditemukan.");
+            return res
+                .status(404)
+                .send("Pengajuan kepengurusan tidak ditemukan.");
         }
         if (submission.is_approved || submission.is_delete) {
-            return res.status(410).send("Pengajuan telah disetujui / dibatalkan.");
+            return res
+                .status(410)
+                .send("Pengajuan telah disetujui / dibatalkan.");
         }
-        user_model_ts_1.default.fetchById(user_id).then(user => {
+        user_model_ts_1.default.fetchById(user_id)
+            .then((user) => {
             // Ensure that user exist and has administrator / superadministrator
             if (user != null && user.role > 0) {
             }
+        })
+            .catch((error) => {
+            console.error(`[error]: Error approving user management ${new Date()}`);
+            console.error(`[error]: ${error}`);
+            return res.status(500).send(error);
         });
+    })
+        .catch((error) => {
+        console.error(`[error]: Error createing user management ${new Date()}`);
+        console.error(`[error]: ${error}`);
+        return res.status(500).send(error);
     });
     // TODO
     // Check whether the user is able to approve this request or not
