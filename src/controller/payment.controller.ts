@@ -9,7 +9,13 @@ class PaymentController {
   static getMethods = (req: Request, res: Response) => {
     PaymentModel.fetch()
       .then((result) => {
-        return res.status(200).send(result);
+        return res.status(200).send(result.map(payment => {
+          return {
+            id: payment.id,
+            name: payment.name,
+            logo: `${process.env.PUBLIC_URL}${payment.logo}`,
+          }
+        }));
       })
       .catch((error) => {
         console.error(`[error]: Fetch payment error ${new Date()}`);
@@ -56,7 +62,7 @@ class PaymentController {
 
     const bucket = firebaseHelper
       .storage()
-      .bucket("gs://abangku-apps.appspot.com");
+      .bucket(process.env.STORAGE_REFERENCE);
     bucket
       .file(uid)
       .save(file)

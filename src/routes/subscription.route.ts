@@ -8,6 +8,7 @@ const router = Router();
 /* Route untuk menentukan biaya berlangganan dalam satuan Rupiah / bulan */
 
 router.get("/price", SubscriptionController.getPrice);
+router.get("/", SubscriptionController.fetch);
 router.post(
   "/",
   body("districtId").isEmpty().withMessage("Kepengurusan tidak membutuhkan biaya keanggotaan."),

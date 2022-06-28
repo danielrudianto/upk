@@ -10,6 +10,9 @@ router.post(
     authHelper.authMiddleware, 
     body('post_uid').not().isEmpty().withMessage("Mohon pilih post yang akan dikomentari."),
     body('comment').not().isEmpty().withMessage("Kolom komentar tidak boleh kosong."),
-    socialMediaController.createComment);
+    socialMediaController.createComment
+);
+
+router.delete("/:commentId", socialMediaController.deleteComment);
 
 export default router;

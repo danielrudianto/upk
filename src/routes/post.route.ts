@@ -6,13 +6,13 @@ const router = Router();
 
 router.get("/:postId", socialMediaController.fetchByUID);
 
-router.get("/comment/:postId", socialMediaController.fetchComments);
+router.get("/comment/:post_uid", socialMediaController.fetchComments);
 
 router.get("/", socialMediaController.fetch);
 
 router.post("/", socialMediaController.createPost);
 
-router.delete("/:postId", socialMediaController.deletePost);
+router.delete("/:post_uid", socialMediaController.deletePost);
 
 router.post(
   "/reaction",

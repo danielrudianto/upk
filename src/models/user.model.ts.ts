@@ -5,7 +5,7 @@ import DistrictModel from "./district.model";
 const prisma = new PrismaClient();
 
 class UserModel {
-  id?: number | null;
+  id?: number;
   name: string;
   nik: string;
   phone_number: string;
@@ -24,14 +24,21 @@ class UserModel {
     phone_number: string,
     district_id: number,
     password: string,
-    gender: string
+    gender: string,
+    profile_image_url: string | null = null,
+    id: number | null = null
   ) {
+    if (id != null) {
+      this.id = id;
+    }
+
     this.name = name;
     this.nik = nik;
     this.phone_number = phone_number;
     this.district_id = district_id;
     this.password = password;
-    this.profile_image_url = null;
+    this.profile_image_url =
+      profile_image_url != null ? profile_image_url : null;
     this.uid = v4();
     this.created_at = new Date();
     this.gender = gender;
@@ -45,6 +52,20 @@ class UserModel {
         name: true,
         phone_number: true,
         nik: true,
+      },
+    });
+  }
+
+  update() {
+    return prisma.user.update({
+      where: {
+        id: this.id,
+      },
+      data: {
+        name: this.name,
+        phone_number: this.phone_number,
+        password: this.password,
+        updated_at: new Date()
       },
     });
   }
@@ -121,7 +142,16 @@ class UserModel {
           },
         },
         password: true,
-        role: true
+        role: true,
+      },
+    });
+  }
+
+  /* Get a user by it's UID */
+  static fetchByUID(uid: string) {
+    return prisma.user.findUnique({
+      where: {
+        uid: uid,
       },
     });
   }

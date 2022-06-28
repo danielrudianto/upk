@@ -228,7 +228,8 @@ model payment_proof {
   url                                  String?            @db.VarChar(100)
   created_by                           Int
   created_at                           DateTime           @db.DateTime(0)
-  is_approved                          Boolean?
+  is_delete                            Boolean            @default(false)
+  is_approved                          Boolean            @default(false)
   approved_by                          Int?
   approved_at                          DateTime?          @db.DateTime(0)
   user_payment_proof_approved_byTouser user?              @relation("payment_proof_approved_byTouser", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payment_proof_ibfk_4")

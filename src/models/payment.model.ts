@@ -15,6 +15,7 @@ class PaymentModel {
         .findMany({
           where: {
             is_delete: false,
+            is_available: true
           },
           orderBy: {
             name: "asc",
@@ -25,6 +26,14 @@ class PaymentModel {
               logo: true,
           }
         })
+    }
+
+    static fetchById(id: number){
+      return prisma.payment_method.findUnique({
+        where:{
+          id: id
+        }
+      })
     }
 
     static fetchUnconfirmedMembershipPayment(offset: number, limit: number){

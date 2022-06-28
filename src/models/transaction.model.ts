@@ -99,6 +99,13 @@ class TransactionModel {
             logo: true,
           },
         },
+        payment_expired_date: true,
+        user: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
       },
     });
   }
@@ -138,8 +145,7 @@ class TransactionModel {
               user: {
                 select: {
                   name: true,
-                  uid: true,
-                  profile_image_url: true,
+                  uid: true
                 },
               },
               district: {
@@ -183,8 +189,7 @@ class TransactionModel {
               user: {
                 select: {
                   name: true,
-                  uid: true,
-                  profile_image_url: true,
+                  uid: true
                 },
               },
               district: {
@@ -228,8 +233,7 @@ class TransactionModel {
               user: {
                 select: {
                   name: true,
-                  uid: true,
-                  profile_image_url: true,
+                  uid: true
                 },
               },
               district: {
@@ -274,8 +278,7 @@ class TransactionModel {
               user: {
                 select: {
                   name: true,
-                  uid: true,
-                  profile_image_url: true,
+                  uid: true
                 },
               },
               district: {
@@ -318,8 +321,7 @@ class TransactionModel {
               user: {
                 select: {
                   name: true,
-                  uid: true,
-                  profile_image_url: true,
+                  uid: true
                 },
               },
               district: {
@@ -362,8 +364,7 @@ class TransactionModel {
               user: {
                 select: {
                   name: true,
-                  uid: true,
-                  profile_image_url: true,
+                  uid: true
                 },
               },
               district: {
@@ -459,8 +460,9 @@ class TransactionModel {
     return prisma.user_transaction.count({
       where:{
         payment_expired_date: {
-          lt: new Date()
+          gte: new Date()
         },
+        created_by: user_id,
         is_paid: false
       }
     })

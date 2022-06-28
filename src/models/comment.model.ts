@@ -54,6 +54,26 @@ class CommentModel {
     });
   }
 
+  static fetchById(id: number){
+    return prisma.post_comment.findUnique({
+      where:{
+        id: id
+      }
+    })
+  }
+
+  static deleteById(id: number){
+    return prisma.post_comment.update({
+      where:{
+        id: id
+      },
+      data: {
+        is_delete: true,
+        deleted_at: new Date()
+      }
+    });
+  }
+
   static fetchByPostUID(uid: string, offset: number = 0, limit: number = 10) {
     return prisma.post_comment.findMany({
       where: {

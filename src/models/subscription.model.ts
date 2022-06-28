@@ -68,7 +68,6 @@ class SubscriptionModel {
         user: {
           select: {
             uid: true,
-            profile_image_url: true,
             name: true,
           },
         },
@@ -117,13 +116,36 @@ class SubscriptionModel {
     return prisma.user_subscription.count({
       where:{
         payment_expired_date: {
-          lt: new Date()
+          gte: new Date()
         },
-        is_paid: false
+        is_paid: false,
+        created_by: user_id
       }
     });
+  }  
+
+  static fetch(user_id: number, offset: number, limit: number){
+    return prisma.$transaction([
+      prisma.user_subscription.findMany({
+        where:{
+          created_by: user_id
+        },
+        orderBy: {
+          created_at: 'desc'
+        },
+        include: {
+          payment_proof: true
+        },
+        take: limit,
+        skip: offset
+      }),
+      prisma.user_subscription.count({
+        where:{
+          created_by: user_id
+        }
+      })
+    ]);
   }
-  
 }
 
 export default SubscriptionModel;

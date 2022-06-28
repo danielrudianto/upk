@@ -234,6 +234,7 @@ class authController {
           const token = sign(
             {
               id: result.id,
+              uid: result.uid,
               name: result.name,
               district: result.district.name,
               phone_number: result.phone_number,
@@ -250,6 +251,7 @@ class authController {
             token: token,
             expiration: expiration.getTime(),
             user: {
+              uid: result.uid,
               name: result.name,
               district: result.district.name,
               phone_number: result.phone_number,
@@ -320,6 +322,7 @@ class authController {
           const token = sign(
             {
               id: user.id,
+              uid: user.uid,
               name: user.name,
               district: user.district.name,
               phone_number: user.phone_number,

@@ -16,6 +16,7 @@ import paymentRoutes from './routes/payment.route';
 import managementRoutes from './routes/management.route';
 import subscriptionRoutes from './routes/subscription.route';
 import authHelper from './helper/auth.helper';
+import profileRoutes from './routes/profile.route';
 
 dotenv.config();
 
@@ -39,6 +40,8 @@ app.use("/product", authHelper.authMiddleware, productRoutes);
 app.use('/transaction', authHelper.authMiddleware, transactionRoutes);
 app.use('/payment', authHelper.authMiddleware, paymentRoutes);
 app.use('/membership', authHelper.authMiddleware, subscriptionRoutes);
+
+app.use('/profile', authHelper.authMiddleware, profileRoutes);
 
 app.use('/management', authHelper.authMiddleware, managementRoutes);
 

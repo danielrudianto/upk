@@ -38,7 +38,7 @@ class socialMediaController {
         if (files.length > 0) {
           const bucket = firebase
             .storage()
-            .bucket("gs://abangku-apps.appspot.com");
+            .bucket(process.env.STORAGE_REFERENCE);
           files.forEach((x, index) => {
             bucket
               .file(x.fileName)
@@ -74,7 +74,7 @@ class socialMediaController {
   };
 
   static deletePost = (req: Request, res: Response) => {
-    const post_uid = req.params.postId;
+    const post_uid = req.params.post_uid;
     PostModel.fetchPostByUID(post_uid).then((post) => {
       if (post == null || post.is_delete) {
         return res.status(404).send("Post tidak ditemukan.");
@@ -90,7 +90,12 @@ class socialMediaController {
             return res.status(500).send(error);
           });
       }
-    });
+    }).catch(error => {
+      console.error(`[error]: Fetching post ${new Date()}`);
+      console.error(`[error]: ${error}`);
+
+      return res.status(500).send(error);
+    })
   };
 
   static createComment = (req: Request, res: Response) => {
@@ -138,6 +143,31 @@ class socialMediaController {
         return res.status(500).send(error);
       });
   };
+
+  static deleteComment = (req: Request, res: Response) => {
+    const commentId = parseInt(req.params.commentId.toString());
+    CommentModel.fetchById(commentId).then(result => {
+      if(result == null || result.is_delete){
+        return res.status(404).send("Komentar tidak ditemukan.");
+      } else if(result.created_by != req.body.userId) {
+        return res.status(400).send("Dilarang menghapus komentar orang lain.");
+      } else {
+        CommentModel.deleteById(commentId).then(delete_result => {
+          return res.status(200).send(delete_result);
+        }).catch(error => {
+          console.error(`[error]: Failed deleting comment ${new Date()}`);
+          console.error(`[error]: ${error}`);
+
+          return res.status(500).send(error);
+        })
+      }
+    }).catch(error => {
+      console.error(`[error]: Error fetching comment ${new Date()}`);
+      console.error(`[error]: ${error}`);
+
+      return res.status(500).send(error);
+    })
+  }
 
   static react = (req: Request, res: Response) => {
     const val_result = validationResult(req);
@@ -210,9 +240,28 @@ class socialMediaController {
             return res.status(404).send("Post tidak ditemukan.");
         }
 
+        const post = result[0];
+        post.user = {
+          uid: post.user.uid,
+          profile_image_url: (post.user.profile_image_url == null) ? null : `${process.env.STORAGE_URL}${post.user.profile_image_url}`,
+          name: post.user.name,
+        }
+
+        const comments = result[1] as any[];
+        comments.map(x => {
+          return {
+            ...x,
+            user: {
+              uid: x.user.uid,
+              name: x.user.name,
+              profile_image_url: (x.user.profile_image_url == null) ? null : `${process.env.STORAGE_URL}${x.user.profile_image_url}`
+            }
+          }
+        })
+
         return res.status(200).send({
-            ...result[0],
-            post_comment: result[1]
+            ...post,
+            post_comment: comments
         })
     }).catch(error => {
         console.error(`[error]: Fetching post by UID ${new Date()}`);
@@ -254,7 +303,16 @@ class socialMediaController {
           posts[index].reaction = post_reaction;
         });
 
-        return res.status(200).send(posts);
+        return res.status(200).send(posts.map(x => {
+          return {
+            ...x,
+            user: {
+              name: x.user.name,
+              profile_image_url:(x.user.profile_image_url == null) ? null :  `${process.env.STORAGE_URL}${x.user.profile_image_url}`,
+              uid: x.user.uid
+            }
+          }
+        }));
       })
       .catch((error) => {
         console.error(`[error]: Fetching posts ${new Date()}`);
@@ -265,13 +323,22 @@ class socialMediaController {
   };
 
   static fetchComments = (req: Request, res: Response) => {
-    const post_uid = req.params.postId;
+    const post_uid = req.params.post_uid;
     const page = (!req.query.page) ? 1 : Math.max(parseInt(req.query.page.toString()), 1);
     const limit = 10;
     const offset = (page - 1) * 10;
 
     CommentModel.fetchByPostUID(post_uid, offset, limit).then(result => {
-        return res.status(200).send(result);
+        return res.status(200).send(result.map(x => {
+          return {
+            ...x,
+            user: {
+              uid: x.user.uid,
+              name: x.user.name,
+              profile_image_url: `${process.env.STORAGE_URL}${x.user.profile_image_url}`
+            }
+          }
+        }));
     }).catch(error => {
         return res.status(500).send(error);
     })
