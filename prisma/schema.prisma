@@ -75,6 +75,8 @@ model user {
   post_comment                                      post_comment[]
   reaction                                          reaction[]
   subscription_price                                subscription_price[]
+  user_follow_userTouser_follow_user_id             user_follow[]        @relation("userTouser_follow_user_id")
+  user_follow_userTouser_follow_user_id_target      user_follow[]        @relation("userTouser_follow_user_id_target")
   user_management_userTouser_management_approved_by user_management[]    @relation("userTouser_management_approved_by")
   user_management                                   user_management[]    @relation("userTouser_management_user_id")
   user_subscription                                 user_subscription[]
@@ -145,18 +147,20 @@ model user_transaction {
 }
 
 model district {
-  id                Int                @id @default(autoincrement())
-  provinsi_id       String?            @db.VarChar(2)
-  kota_id           String?            @db.VarChar(2)
-  kecamatan_id      String?            @db.VarChar(2)
-  kelurahan_id      String?            @db.VarChar(4)
-  name              String             @db.VarChar(100)
-  profile_image_url String?            @db.VarChar(100)
-  post              post[]
-  post_comment      post_comment[]
-  user              user[]
-  user_management   user_management[]
-  user_transaction  user_transaction[]
+  id                                                   Int                @id @default(autoincrement())
+  provinsi_id                                          String?            @db.VarChar(2)
+  kota_id                                              String?            @db.VarChar(2)
+  kecamatan_id                                         String?            @db.VarChar(2)
+  kelurahan_id                                         String?            @db.VarChar(4)
+  name                                                 String             @db.VarChar(100)
+  profile_image_url                                    String?            @db.VarChar(100)
+  post                                                 post[]
+  post_comment                                         post_comment[]
+  user                                                 user[]
+  user_follow_districtTouser_follow_district_id        user_follow[]      @relation("districtTouser_follow_district_id")
+  user_follow_districtTouser_follow_district_id_target user_follow[]      @relation("districtTouser_follow_district_id_target")
+  user_management                                      user_management[]
+  user_transaction                                     user_transaction[]
 
   @@index([name], map: "district_fulltext")
   @@index([provinsi_id, kota_id, kecamatan_id, kelurahan_id], map: "district_index")
@@ -241,4 +245,23 @@ model payment_proof {
   @@index([user_subscription_id], map: "payment_proof_ibfk_2_idx")
   @@index([user_transaction_id], map: "payment_proof_ibfk_3_idx")
   @@index([approved_by], map: "payment_proof_ibfk_4_idx")
+}
+
+model user_follow {
+  id                                                Int       @id @default(autoincrement())
+  user_id                                           Int?
+  user_id_target                                    Int?
+  district_id                                       Int?
+  district_id_target                                Int?
+  created_at                                        DateTime  @db.DateTime(0)
+  deleted_at                                        DateTime? @db.DateTime(0)
+  district_districtTouser_follow_district_id        district? @relation("districtTouser_follow_district_id", fields: [district_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_follow_ibfk_3")
+  district_districtTouser_follow_district_id_target district? @relation("districtTouser_follow_district_id_target", fields: [district_id_target], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_follow_ibfk_4")
+  user                                              user?     @relation("userTouser_follow_user_id", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_follow_ibfk_1")
+  user_target                                       user?     @relation("userTouser_follow_user_id_target", fields: [user_id_target], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_follow_ibfk_2")
+
+  @@index([user_id], map: "user_follow_ibfk_1_idx")
+  @@index([user_id_target], map: "user_follow_ibfk_2_idx")
+  @@index([district_id], map: "user_follow_ibfk_3_idx")
+  @@index([district_id_target], map: "user_follow_ibfk_4_idx")
 }

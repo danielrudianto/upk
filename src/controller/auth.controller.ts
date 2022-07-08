@@ -147,7 +147,7 @@ class authController {
                     .then(() => {
                       return res
                         .status(201)
-                        .send("Pendaftaran pengguna berhasil.");
+                        .send(result);
                     })
                     .catch((error) => {
                       console.error(

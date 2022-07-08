@@ -8,10 +8,16 @@ import PostReactionModel from "../models/post_reaction.model";
 import { validationResult } from "express-validator";
 import MediaHelper from "../helper/media.helper";
 import QueryTransactionHelper from "../helper/transaction.helper";
+import UserModel from "../models/user.model.ts";
+import UserFollowModel from "../models/user_follow.model";
 
-class socialMediaController {
+class SocialMediaController {
   static createPost = (req: Request, res: Response) => {
-    const post = new PostModel(req.body.caption, req.body.userId, req.body.districtId);
+    const post = new PostModel(
+      req.body.caption,
+      req.body.userId,
+      req.body.districtId
+    );
     post
       .create()
       .then((result) => {
@@ -75,27 +81,29 @@ class socialMediaController {
 
   static deletePost = (req: Request, res: Response) => {
     const post_uid = req.params.post_uid;
-    PostModel.fetchPostByUID(post_uid).then((post) => {
-      if (post == null || post.is_delete) {
-        return res.status(404).send("Post tidak ditemukan.");
-      } else {
-        PostModel.delete(post.id)
-          .then(() => {
-            return res.status(200).send("Post berhasil dihapus.");
-          })
-          .catch((error) => {
-            console.error(`[error]: Delete post ${new Date()}`);
-            console.error(`[error]: ${error}`);
+    PostModel.fetchPostByUID(post_uid)
+      .then((post) => {
+        if (post == null || post.is_delete) {
+          return res.status(404).send("Post tidak ditemukan.");
+        } else {
+          PostModel.delete(post.id)
+            .then(() => {
+              return res.status(200).send("Post berhasil dihapus.");
+            })
+            .catch((error) => {
+              console.error(`[error]: Delete post ${new Date()}`);
+              console.error(`[error]: ${error}`);
 
-            return res.status(500).send(error);
-          });
-      }
-    }).catch(error => {
-      console.error(`[error]: Fetching post ${new Date()}`);
-      console.error(`[error]: ${error}`);
+              return res.status(500).send(error);
+            });
+        }
+      })
+      .catch((error) => {
+        console.error(`[error]: Fetching post ${new Date()}`);
+        console.error(`[error]: ${error}`);
 
-      return res.status(500).send(error);
-    })
+        return res.status(500).send(error);
+      });
   };
 
   static createComment = (req: Request, res: Response) => {
@@ -146,28 +154,34 @@ class socialMediaController {
 
   static deleteComment = (req: Request, res: Response) => {
     const commentId = parseInt(req.params.commentId.toString());
-    CommentModel.fetchById(commentId).then(result => {
-      if(result == null || result.is_delete){
-        return res.status(404).send("Komentar tidak ditemukan.");
-      } else if(result.created_by != req.body.userId) {
-        return res.status(400).send("Dilarang menghapus komentar orang lain.");
-      } else {
-        CommentModel.deleteById(commentId).then(delete_result => {
-          return res.status(200).send(delete_result);
-        }).catch(error => {
-          console.error(`[error]: Failed deleting comment ${new Date()}`);
-          console.error(`[error]: ${error}`);
+    CommentModel.fetchById(commentId)
+      .then((result) => {
+        if (result == null || result.is_delete) {
+          return res.status(404).send("Komentar tidak ditemukan.");
+        } else if (result.created_by != req.body.userId) {
+          return res
+            .status(400)
+            .send("Dilarang menghapus komentar orang lain.");
+        } else {
+          CommentModel.deleteById(commentId)
+            .then((delete_result) => {
+              return res.status(200).send(delete_result);
+            })
+            .catch((error) => {
+              console.error(`[error]: Failed deleting comment ${new Date()}`);
+              console.error(`[error]: ${error}`);
 
-          return res.status(500).send(error);
-        })
-      }
-    }).catch(error => {
-      console.error(`[error]: Error fetching comment ${new Date()}`);
-      console.error(`[error]: ${error}`);
+              return res.status(500).send(error);
+            });
+        }
+      })
+      .catch((error) => {
+        console.error(`[error]: Error fetching comment ${new Date()}`);
+        console.error(`[error]: ${error}`);
 
-      return res.status(500).send(error);
-    })
-  }
+        return res.status(500).send(error);
+      });
+  };
 
   static react = (req: Request, res: Response) => {
     const val_result = validationResult(req);
@@ -232,44 +246,49 @@ class socialMediaController {
     const fetch_posts = PostModel.fetchPostByUID(uid);
     const fetch_comments = CommentModel.fetchByPostUID(uid);
 
-    QueryTransactionHelper.create([
-        fetch_posts,
-        fetch_comments
-    ]).then(result => {
-        if(result[0] == null || result[0].is_delete){
-            return res.status(404).send("Post tidak ditemukan.");
+    QueryTransactionHelper.create([fetch_posts, fetch_comments])
+      .then((result) => {
+        if (result[0] == null || result[0].is_delete) {
+          return res.status(404).send("Post tidak ditemukan.");
         }
 
         const post = result[0];
         post.user = {
           uid: post.user.uid,
-          profile_image_url: (post.user.profile_image_url == null) ? null : `${process.env.STORAGE_URL}${post.user.profile_image_url}`,
+          profile_image_url:
+            post.user.profile_image_url == null
+              ? null
+              : `${process.env.STORAGE_URL}${post.user.profile_image_url}`,
           name: post.user.name,
-        }
+        };
 
         const comments = result[1] as any[];
-        comments.map(x => {
+        comments.map((x) => {
           return {
             ...x,
             user: {
               uid: x.user.uid,
               name: x.user.name,
-              profile_image_url: (x.user.profile_image_url == null) ? null : `${process.env.STORAGE_URL}${x.user.profile_image_url}`
-            }
-          }
-        })
+              profile_image_url:
+                x.user.profile_image_url == null
+                  ? null
+                  : `${process.env.STORAGE_URL}${x.user.profile_image_url}`,
+            },
+          };
+        });
 
         return res.status(200).send({
-            ...post,
-            post_comment: comments
-        })
-    }).catch(error => {
+          ...post,
+          post_comment: comments,
+        });
+      })
+      .catch((error) => {
         console.error(`[error]: Fetching post by UID ${new Date()}`);
         console.error(`[error]: ${error}`);
-        
+
         return res.status(500).send(error);
-    })
-  }
+      });
+  };
 
   static fetch = (req: Request, res: Response) => {
     const last_fetched = !req.query.last_fetched_post
@@ -303,16 +322,21 @@ class socialMediaController {
           posts[index].reaction = post_reaction;
         });
 
-        return res.status(200).send(posts.map(x => {
-          return {
-            ...x,
-            user: {
-              name: x.user.name,
-              profile_image_url:(x.user.profile_image_url == null) ? null :  `${process.env.STORAGE_URL}${x.user.profile_image_url}`,
-              uid: x.user.uid
-            }
-          }
-        }));
+        return res.status(200).send(
+          posts.map((x) => {
+            return {
+              ...x,
+              user: {
+                name: x.user.name,
+                profile_image_url:
+                  x.user.profile_image_url == null
+                    ? null
+                    : `${process.env.STORAGE_URL}${x.user.profile_image_url}`,
+                uid: x.user.uid,
+              },
+            };
+          })
+        );
       })
       .catch((error) => {
         console.error(`[error]: Fetching posts ${new Date()}`);
@@ -324,25 +348,146 @@ class socialMediaController {
 
   static fetchComments = (req: Request, res: Response) => {
     const post_uid = req.params.post_uid;
-    const page = (!req.query.page) ? 1 : Math.max(parseInt(req.query.page.toString()), 1);
+    const page = !req.query.page
+      ? 1
+      : Math.max(parseInt(req.query.page.toString()), 1);
     const limit = 10;
     const offset = (page - 1) * 10;
 
-    CommentModel.fetchByPostUID(post_uid, offset, limit).then(result => {
-        return res.status(200).send(result.map(x => {
-          return {
-            ...x,
-            user: {
-              uid: x.user.uid,
-              name: x.user.name,
-              profile_image_url: `${process.env.STORAGE_URL}${x.user.profile_image_url}`
-            }
-          }
-        }));
-    }).catch(error => {
+    CommentModel.fetchByPostUID(post_uid, offset, limit)
+      .then((result) => {
+        return res.status(200).send(
+          result.map((x) => {
+            return {
+              ...x,
+              user: {
+                uid: x.user.uid,
+                name: x.user.name,
+                profile_image_url: `${process.env.STORAGE_URL}${x.user.profile_image_url}`,
+              },
+            };
+          })
+        );
+      })
+      .catch((error) => {
+        console.error(`[error]: Error on following ${new Date()}`);
+        console.error(`[error]: ${error}`);
+
         return res.status(500).send(error);
-    })
-  }
+      });
+  };
+
+  static follow = (req: Request, res: Response) => {
+    const user_id = req.body.userId;
+    const user_uid_target = req.body.user_uid;
+    const district_id = req.body.districtId;
+    const district_id_target = req.body.district_id;
+
+    // Fetch user ID target
+    // If not null
+    if (user_uid_target != null) {
+      UserModel.fetchByUID(user_uid_target).then((user) => {
+        const user_id_target = user?.id!;
+        UserFollowModel.fetchExistingUser(
+          user_id,
+          district_id,
+          user_id_target,
+          district_id_target
+        )
+          .then((follow) => {
+            if (follow == null) {
+              // If have not follow
+              // Then follow
+              const user_follow = new UserFollowModel(
+                user_id,
+                district_id,
+                user_id_target
+              );
+              user_follow
+                .create()
+                .then((result) => {
+                  return res.status(201).send(result);
+                })
+                .catch((error) => {
+                  console.error(`[error]: Error on following ${new Date()}`);
+                  console.error(`[error]: ${error}`);
+
+                  return res.status(500).send(error);
+                });
+            }
+          })
+          .catch((error) => {
+            console.error(`[error]: Error on following ${new Date()}`);
+            console.error(`[error]: ${error}`);
+
+            return res.status(500).send(error);
+          });
+      });
+    } else {
+      const user_follow = new UserFollowModel(
+        user_id,
+        district_id,
+        null,
+        district_id_target
+      );
+
+      user_follow
+        .create()
+        .then((result) => {})
+        .catch((error) => {
+          console.error(`[error]: Error on following ${new Date()}`);
+          console.error(`[error]: ${error}`);
+
+          return res.status(500).send(error);
+        });
+    }
+  };
+
+  static unfollow = (req: Request, res: Response) => {
+    const user_uid_target = req.params.user_id;
+    const user_id = req.body.userId;
+    const district_id = req.body.districtId;
+    const district_id_target = req.body.district_id;
+
+    UserModel.fetchByUID(user_uid_target)
+      .then((user) => {
+        UserFollowModel.fetchExistingUser(
+          user_id,
+          district_id,
+          user?.id!,
+          district_id_target
+        )
+          .then((user_follow) => {
+            if (user_follow == null) {
+              // Not currently following the spesification required by the request
+              return res.status(404).send("Hubungan tidak ditemukan.");
+            } else {
+              UserFollowModel.delete(user_follow.id)
+                .then((result) => {
+                  return res.status(201).send();
+                })
+                .catch((error) => {
+                  console.error(`[error]: Error unfollowing ${new Date()}`);
+                  console.error(`[error]: ${error}`);
+
+                  return res.status(500).send(error);
+                });
+            }
+          })
+          .catch((error) => {
+            console.error(`[error]: Error unfollowing ${new Date()}`);
+            console.error(`[error]: ${error}`);
+
+            return res.status(500).send(error);
+          });
+      })
+      .catch((error) => {
+        console.error(`[error]: Error unfollowing ${new Date()}`);
+        console.error(`[error]: ${error}`);
+
+        return res.status(500).send(error);
+      });
+  };
 }
 
-export default socialMediaController;
+export default SocialMediaController;

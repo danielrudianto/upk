@@ -133,6 +133,7 @@ class UserModel {
       },
       select: {
         id: true,
+        uid: true,
         name: true,
         nik: true,
         phone_number: true,

@@ -391,6 +391,14 @@ class TransactionModel {
     }
   }
 
+  static fetchById(id: number){
+    return prisma.user_transaction.findUnique({
+      where:{
+        id: id
+      }
+    })
+  }
+
   static count(
     mode: number,
     user_id: number | null = null,
@@ -464,6 +472,19 @@ class TransactionModel {
         },
         created_by: user_id,
         is_paid: false
+      }
+    })
+  }
+
+  static approvePayment(transaction_id: number, payment_reference: string){
+    return prisma.user_transaction.update({
+      where:{
+        id: transaction_id
+      },
+      data: {
+        is_paid: true,
+        paid_at: new Date(),
+        payment_reference: payment_reference,
       }
     })
   }

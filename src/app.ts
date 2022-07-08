@@ -17,6 +17,7 @@ import managementRoutes from './routes/management.route';
 import subscriptionRoutes from './routes/subscription.route';
 import authHelper from './helper/auth.helper';
 import profileRoutes from './routes/profile.route';
+import socialMediaRoutes from './routes/social_media.route';
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ app.use("/district", districtRoutes);
 
 app.use("/post", authHelper.authMiddleware, postRoutes);
 app.use("/comment", authHelper.authMiddleware, commentRoutes);
+app.use("/social", authHelper.authMiddleware, socialMediaRoutes);
 
 app.use("/product", authHelper.authMiddleware, productRoutes);
 app.use('/transaction', authHelper.authMiddleware, transactionRoutes);
