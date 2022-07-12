@@ -56,6 +56,98 @@ class UserManagementModel {
       },
     });
   }
+
+  static fetchStaffSubmission(provinsi_id: string, kota_id: string | null = null, kecamatan_id: string | null = null, kelurahan_id: string | null){
+    return prisma.user_management.findMany({
+      where:{
+        district: {
+          provinsi_id: provinsi_id,
+          kota_id: kota_id,
+          kecamatan_id: kecamatan_id,
+          kelurahan_id: kelurahan_id
+        },
+        is_approved: false,
+        is_delete: false,
+        management_level: {
+          not: 1
+        }
+      }
+    })
+  }
+
+  static fetchChildrenSubmission(provinsi_id: string | null = null, kota_id: string | null = null, kecamatan_id: string | null = null, kelurahan_id: string | null){
+    if(provinsi_id != null && kota_id != null && kecamatan_id != null && kelurahan_id != null){
+        // User is on kelurahan account
+        // Return promise of empty array
+        return Promise.resolve([]);
+    } else if(provinsi_id != null && kota_id != null && kecamatan_id != null && kelurahan_id == null){
+      // User is on kecamatan account
+      // Return submission on kelurahan kevel
+      return prisma.user_management.findMany({
+        where:{
+          district: {
+            provinsi_id: provinsi_id,
+            kota_id: kota_id,
+            kecamatan_id: kecamatan_id,
+            kelurahan_id: {
+              not: null
+            }
+          },
+          is_approved: false,
+          is_delete: false,
+          management_level: 1
+        }
+      })
+    } else if(provinsi_id != null && kota_id != null && kecamatan_id == null && kelurahan_id == null){
+      return prisma.user_management.findMany({
+        where:{
+          district: {
+            provinsi_id: provinsi_id,
+            kota_id: kota_id,
+            kecamatan_id: {
+              not: null
+            },
+            kelurahan_id: null
+          },
+          is_approved: false,
+          is_delete: false,
+          management_level: 1
+        }
+      })
+    } else if(provinsi_id != null && kota_id == null && kecamatan_id == null && kelurahan_id == null){
+      return prisma.user_management.findMany({
+        where:{
+          district: {
+            provinsi_id: provinsi_id,
+            kota_id: {
+              not: null
+            },
+            kecamatan_id: null,
+            kelurahan_id: null
+          },
+          is_approved: false,
+          is_delete: false,
+          management_level: 1
+        }
+      })
+    } else if(provinsi_id == null && kota_id == null && kecamatan_id == null && kelurahan_id == null){
+      return prisma.user_management.findMany({
+        where:{
+          district: {
+            provinsi_id: {
+              not: null
+            },
+            kota_id: null,
+            kecamatan_id: null,
+            kelurahan_id: null
+          },
+          is_approved: false,
+          is_delete: false,
+          management_level: 1
+        }
+      })
+    }
+  }
 }
 
 export default UserManagementModel;

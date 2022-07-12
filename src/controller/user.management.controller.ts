@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import DistrictModel from "../models/district.model";
 import UserManagementModel from "../models/management.model";
 import UserModel from "../models/user.model.ts";
 
@@ -79,6 +80,45 @@ class ManagementController {
 
     // TODO
     // Check whether the user is able to approve this request or not
+  };
+
+  static fetch = (req: Request, res: Response) => {
+    const district_id = req.body.districtId;
+    DistrictModel.getById(district_id)
+      .then((district) => {
+        // Get the user's district account
+        // Then get user management submission
+
+        Promise.all([
+          UserManagementModel.fetchStaffSubmission(
+            district?.provinsi_id!,
+            district?.kota_id,
+            district?.kecamatan_id,
+            district?.kecamatan_id!
+          ),
+          UserManagementModel.fetchChildrenSubmission(
+            district?.provinsi_id,
+            district?.kota_id,
+            district?.kecamatan_id,
+            district?.kelurahan_id!
+          ),
+        ])
+          .then((result) => {
+            return res.status(200).send(result);
+          })
+          .catch((error) => {
+            console.error(`[error]: Error fetching submission ${new Date()}`);
+            console.error(`[error]: ${error.toString()}`);
+
+            return res.status(500).send(error);
+          });
+      })
+      .catch((error) => {
+        console.error(`[error]: Error fetching submission ${new Date()}`);
+        console.error(`[error]: ${error.toString()}`);
+
+        return res.status(500).send(error);
+      });
   };
 }
 
