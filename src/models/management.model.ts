@@ -48,6 +48,10 @@ class UserManagementModel {
           select: {
             id: true,
             name: true,
+            provinsi_id: true,
+            kecamatan_id: true,
+            kelurahan_id: true,
+            kota_id: true
           },
         },
         management_level: true,
@@ -70,6 +74,18 @@ class UserManagementModel {
         is_delete: false,
         management_level: {
           not: 1
+        }
+      },
+      select: {
+        id: true,
+        created_at: true,
+        user: {
+          select: {
+            uid: true,
+            name: true,
+            profile_image_url: true,
+            nik: true
+          }
         }
       }
     })
@@ -96,6 +112,18 @@ class UserManagementModel {
           is_approved: false,
           is_delete: false,
           management_level: 1
+        },
+        select: {
+          id: true,
+          created_at: true,
+          user: {
+            select: {
+              uid: true,
+              name: true,
+              profile_image_url: true,
+              nik: true
+            }
+          }
         }
       })
     } else if(provinsi_id != null && kota_id != null && kecamatan_id == null && kelurahan_id == null){
@@ -112,6 +140,18 @@ class UserManagementModel {
           is_approved: false,
           is_delete: false,
           management_level: 1
+        },
+        select: {
+          id: true,
+          created_at: true,
+          user: {
+            select: {
+              uid: true,
+              name: true,
+              profile_image_url: true,
+              nik: true
+            }
+          }
         }
       })
     } else if(provinsi_id != null && kota_id == null && kecamatan_id == null && kelurahan_id == null){
@@ -128,6 +168,18 @@ class UserManagementModel {
           is_approved: false,
           is_delete: false,
           management_level: 1
+        },
+        select: {
+          id: true,
+          created_at: true,
+          user: {
+            select: {
+              uid: true,
+              name: true,
+              profile_image_url: true,
+              nik: true
+            }
+          }
         }
       })
     } else if(provinsi_id == null && kota_id == null && kecamatan_id == null && kelurahan_id == null){
@@ -144,9 +196,49 @@ class UserManagementModel {
           is_approved: false,
           is_delete: false,
           management_level: 1
+        },
+        select: {
+          id: true,
+          created_at: true,
+          user: {
+            select: {
+              uid: true,
+              name: true,
+              profile_image_url: true,
+              nik: true
+            }
+          }
         }
       })
     }
+  }
+
+  static approve(id: number, created_by: number){
+    return prisma.user_management.update({
+      where:{
+        id: id,
+      },
+      data: {
+        is_approved: true,
+        approved_at: new Date(),
+        approved_by: created_by
+      },
+      select: {
+        id: true,
+        management_level: true,
+        district: {
+          select: {
+            name: true
+          }
+        },
+        user: {
+          select: {
+            uid: true,
+            name: true
+          }
+        }
+      }
+    })
   }
 }
 

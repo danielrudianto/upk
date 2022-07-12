@@ -218,7 +218,7 @@ model user_management {
   approved_at                            DateTime? @db.DateTime(0)
   user_userTouser_management_approved_by user?     @relation("userTouser_management_approved_by", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_management_ibfk_2")
   district                               district  @relation(fields: [district_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_management_ibfk_3")
-  user_userTouser_management_user_id     user      @relation("userTouser_management_user_id", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_management_ibfk_1")
+  user                                   user      @relation("userTouser_management_user_id", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_management_ibfk_1")
 
   @@index([user_id], map: "user_management_ibfk_1_idx")
   @@index([approved_by], map: "user_management_ibfk_2_idx")

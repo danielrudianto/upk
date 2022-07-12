@@ -40,7 +40,7 @@ class ManagementController {
 
   static approve = (req: Request, res: Response) => {
     const user_id = req.body.userId;
-    const id = req.body.id;
+    const id = req.body.request_id;
 
     UserManagementModel.fetchById(id)
       .then((submission) => {
@@ -56,16 +56,199 @@ class ManagementController {
             .send("Pengajuan telah disetujui / dibatalkan.");
         }
 
+        // TODO
+        // Check whether the user is able to approve this request or not
         UserModel.fetchById(user_id)
           .then((user) => {
-            // Ensure that user exist and has administrator / superadministrator
-            if (user != null && user.role > 0) {
+            if (user == null || user.user_management.length == 0) {
+              return res
+                .status(400)
+                .send("Status kepengurusan tidak ditemukan.");
+            } else {
+              const user_district = user?.user_management[0].district_id;
+              const user_management = user?.user_management[0].management_level;
+
+              DistrictModel.getById(user_district!)
+                .then((district) => {
+                  if (submission.management_level == 1) {
+                    // Request to become a "Ketua" managemenent level
+                    if (
+                      submission.district?.provinsi_id != null &&
+                      submission.district.kota_id != null &&
+                      submission.district.kecamatan_id != null &&
+                      submission.district.kelurahan_id != null
+                    ) {
+                      // Submission to become the head of Kelurahan office
+                      // Approved by head of kecamatan office
+                      if (
+                        user_management == 1 &&
+                        district?.provinsi_id ==
+                          submission.district.provinsi_id &&
+                        district.kota_id == submission.district.kota_id &&
+                        district.kecamatan_id ==
+                          submission.district.kecamatan_id
+                      ) {
+                        UserManagementModel.approve(id, user_id)
+                          .then((result) => {
+                            return res.status(201).send(result);
+                          })
+                          .catch((error) => {
+                            console.error(
+                              `[error]: Error updating management submission ${new Date()}`
+                            );
+                            console.error(`[error]: ${error}`);
+
+                            return res.status(500).send(error);
+                          });
+                      } else {
+                        return res
+                          .status(400)
+                          .send(
+                            "Pengguna tidak dapat melakukan approval terhadap request ini."
+                          );
+                      }
+                    } else if (
+                      submission.district?.provinsi_id != null &&
+                      submission.district.kota_id != null &&
+                      submission.district.kecamatan_id != null &&
+                      submission.district.kelurahan_id == null
+                    ) {
+                      // Submission to become the head of Kecamatan office.
+                      // Approved by head of Kota office
+                      if (
+                        user_management == 1 &&
+                        district?.provinsi_id ==
+                          submission.district.provinsi_id &&
+                        district.kota_id == submission.district.kota_id
+                      ) {
+                        UserManagementModel.approve(id, user_id)
+                          .then((result) => {
+                            return res.status(201).send(result);
+                          })
+                          .catch((error) => {
+                            console.error(
+                              `[error]: Error updating management submission ${new Date()}`
+                            );
+                            console.error(`[error]: ${error}`);
+
+                            return res.status(500).send(error);
+                          });
+                      } else {
+                        return res
+                          .status(400)
+                          .send(
+                            "Pengguna tidak dapat melakukan approval terhadap request ini."
+                          );
+                      }
+                    } else if (
+                      submission.district?.provinsi_id != null &&
+                      submission.district.kota_id != null &&
+                      submission.district.kecamatan_id == null &&
+                      submission.district.kelurahan_id == null
+                    ) {
+                      // Submission to become the head of Kota office.
+                      // Approved by head of Province office
+                      if (
+                        user_management == 1 &&
+                        district?.provinsi_id ==
+                          submission.district.provinsi_id
+                      ) {
+                        UserManagementModel.approve(id, user_id)
+                          .then((result) => {
+                            return res.status(201).send(result);
+                          })
+                          .catch((error) => {
+                            console.error(
+                              `[error]: Error updating management submission ${new Date()}`
+                            );
+                            console.error(`[error]: ${error}`);
+
+                            return res.status(500).send(error);
+                          });
+                      } else {
+                        return res
+                          .status(400)
+                          .send(
+                            "Pengguna tidak dapat melakukan approval terhadap request ini."
+                          );
+                      }
+                    } else if (
+                      submission.district?.provinsi_id != null &&
+                      submission.district.kota_id == null &&
+                      submission.district.kecamatan_id == null &&
+                      submission.district.kelurahan_id == null
+                    ) {
+                      // Submission to become the head of Province office.
+                      // Approved by head of Pusat office
+                      if (
+                        user_management == 1 &&
+                        district?.provinsi_id == null && district?.kecamatan_id == null && district?.kelurahan_id == null && district?.kota_id == null
+                      ) {
+                        UserManagementModel.approve(id, user_id)
+                          .then((result) => {
+                            return res.status(201).send(result);
+                          })
+                          .catch((error) => {
+                            console.error(
+                              `[error]: Error updating management submission ${new Date()}`
+                            );
+                            console.error(`[error]: ${error}`);
+
+                            return res.status(500).send(error);
+                          });
+                      } else {
+                        return res
+                          .status(400)
+                          .send(
+                            "Pengguna tidak dapat melakukan approval terhadap request ini."
+                          );
+                      }
+                    }
+                  } else {
+                    // Request to become staff management level
+                    if (
+                      district?.provinsi_id ==
+                        submission.district.provinsi_id &&
+                      district?.kota_id == submission.district.kota_id &&
+                      district?.kecamatan_id ==
+                        submission.district.kecamatan_id &&
+                      district?.kelurahan_id ==
+                        submission.district.kelurahan_id &&
+                      user_management == 1
+                    ) {
+                      UserManagementModel.approve(id, user_id)
+                        .then((result) => {
+                          return res.status(201).send(result);
+                        })
+                        .catch((error) => {
+                          console.error(
+                            `[error]: Error updating management submission ${new Date()}`
+                          );
+                          console.error(`[error]: ${error}`);
+
+                          return res.status(500).send(error);
+                        });
+                    } else {
+                      return res
+                        .status(400)
+                        .send(
+                          "Pengguna tidak dapat melakukan approval terhadap request ini."
+                        );
+                    }
+                  }
+                })
+                .catch((error) => {
+                  console.error(
+                    `[error]: Error on fetching district ${new Date()}`
+                  );
+                  console.error(`[error]: ${error}`);
+
+                  return res.status(500).send(error);
+                });
             }
           })
           .catch((error) => {
-            console.error(
-              `[error]: Error approving user management ${new Date()}`
-            );
+            console.error(`[error]: Error on fetching user ${new Date()}`);
             console.error(`[error]: ${error}`);
 
             return res.status(500).send(error);
@@ -77,9 +260,6 @@ class ManagementController {
 
         return res.status(500).send(error);
       });
-
-    // TODO
-    // Check whether the user is able to approve this request or not
   };
 
   static fetch = (req: Request, res: Response) => {
@@ -104,7 +284,10 @@ class ManagementController {
           ),
         ])
           .then((result) => {
-            return res.status(200).send(result);
+            return res.status(200).send({
+              staff: result[0],
+              branch: result[1],
+            });
           })
           .catch((error) => {
             console.error(`[error]: Error fetching submission ${new Date()}`);

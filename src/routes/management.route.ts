@@ -8,7 +8,8 @@ router.get("/", ManagementController.fetch)
 
 router.post(
   "/approve",
-  body("request_id").not().isEmpty().withMessage("ID Pengajuan mohon diisi.")
+  body("request_id").not().isEmpty().withMessage("ID Pengajuan mohon diisi."),
+  ManagementController.approve
 );
 
 router.post(

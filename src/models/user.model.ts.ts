@@ -144,6 +144,16 @@ class UserModel {
         },
         password: true,
         role: true,
+        user_management: {
+          where: {
+            is_approved: true,
+            is_delete: false
+          },
+          select: {
+            management_level: true,
+            district_id: true
+          }
+        }
       },
     });
   }
