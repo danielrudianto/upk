@@ -58,7 +58,6 @@ class SubscriptionController {
       TransactionModel.checkRunningTransaction(userId),
     ])
       .then((result) => {
-        console.log(result);
         if (result[0] == 0 && result[1] == 0) {
           // Everything has been paid / expired
           const date = new Date();
@@ -117,20 +116,34 @@ class SubscriptionController {
                           // Create BRI Virtual account for user
                           // TODO:
                           // Create virtual account from BRI banking service
-                          return res
-                            .status(405)
-                            .send(
-                              "Pembayaran tidak dapat dilakukan dengan metode ini."
-                            );
+                          return res.status(201).send({
+                            id: result.id,
+                            price: parseFloat(result.price.toString()),
+                            membership: parseFloat(result.price.toString()),
+                            service: parseFloat(result.price.toString()),
+                            payment_method: {
+                              name: result.payment_method.name,
+                              logo: `${process.env.PUBLIC_URL}${result.payment_method.logo}`,
+                            },
+                            created_at: result.created_at,
+                            user: result.user,
+                          });
                         case 2:
                           // Payment using Mandiri Virtual account
                           // TODO:
                           // Create virtual account from BRI banking service
-                          return res
-                            .status(405)
-                            .send(
-                              "Pembayaran tidak dapat dilakukan dengan metode ini."
-                            );
+                          return res.status(201).send({
+                            id: result.id,
+                            price: parseFloat(result.price.toString()),
+                            membership: parseFloat(result.price.toString()),
+                            service: parseFloat(result.price.toString()),
+                            payment_method: {
+                              name: result.payment_method.name,
+                              logo: `${process.env.PUBLIC_URL}${result.payment_method.logo}`,
+                            },
+                            created_at: result.created_at,
+                            user: result.user,
+                          });
                         case 3:
                           // Payment using manual verification BRI
                           // TODO:

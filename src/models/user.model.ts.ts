@@ -52,6 +52,7 @@ class UserModel {
         name: true,
         phone_number: true,
         nik: true,
+        gender: true,
       },
     });
   }
@@ -65,7 +66,7 @@ class UserModel {
         name: this.name,
         phone_number: this.phone_number,
         password: this.password,
-        updated_at: new Date()
+        updated_at: new Date(),
       },
     });
   }
@@ -81,6 +82,8 @@ class UserModel {
         name: true,
         nik: true,
         phone_number: true,
+        gender: true,
+        uid: true
       },
     });
   }
@@ -96,6 +99,7 @@ class UserModel {
         uid: true,
         name: true,
         nik: true,
+        gender: true,
         phone_number: true,
         district: {
           select: {
@@ -136,6 +140,7 @@ class UserModel {
         uid: true,
         name: true,
         nik: true,
+        gender: true,
         phone_number: true,
         district: {
           select: {
@@ -147,13 +152,13 @@ class UserModel {
         user_management: {
           where: {
             is_approved: true,
-            is_delete: false
+            is_delete: false,
           },
           select: {
             management_level: true,
-            district_id: true
-          }
-        }
+            district_id: true,
+          },
+        },
       },
     });
   }
@@ -165,6 +170,65 @@ class UserModel {
         uid: uid,
       },
     });
+  }
+
+  /* Get user profile by user ID */
+  static fetchProfileById(id: number) {
+    return prisma.$transaction([
+      prisma.user.findUnique({
+        where: {
+          id: id,
+        },
+        select: {
+          name: true,
+          profile_image_url: true,
+          nik: true,
+          gender: true,
+          uid: true,
+          created_at: true,
+          phone_number: true,
+          user_subscription: {
+            select: {
+              valid_from: true,
+              valid_until: true,
+              payment_method: {
+                select: {
+                  name: true,
+                  logo: true,
+                },
+              },
+            },
+            where: {
+              is_paid: true,
+            },
+          },
+        },
+      }),
+      prisma.user_follow.count({
+        where: {
+          user_id_target: id,
+          deleted_at: null,
+        },
+      }),
+      prisma.user_follow.count({
+        where: {
+          user_id: id,
+          deleted_at: null,
+        },
+      }),
+      prisma.post.count({
+        where: {
+          created_by: id,
+          is_delete: false,
+        },
+      }),
+      prisma.user_subscription.count({
+        where: {
+          created_by: id,
+          is_paid: true,
+        },
+      }),
+    ]);
   }
 }
 

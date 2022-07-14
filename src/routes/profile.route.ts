@@ -12,4 +12,6 @@ router.put(
   UserController.update
 );
 
+router.get("/", UserController.fetch)
+
 export default router;

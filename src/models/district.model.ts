@@ -122,6 +122,17 @@ class DistrictModel {
       skip: 0,
     });
   }
+
+  static fetchProfileById(id: number){
+    return prisma.district.findUnique({
+      where:{
+        id: id
+      },
+      select: {
+        
+      }
+    })
+  }
 }
 
 export default DistrictModel;

@@ -303,6 +303,15 @@ class ManagementController {
         return res.status(500).send(error);
       });
   };
+
+  static fetchById = (req: Request, res: Response) => {
+    const id = parseInt(req.params.requestId);
+    UserManagementModel.fetchById(id).then(result => {
+      return res.status(200).send(result);
+    }).catch(error => {
+      return res.status(500).send(error);
+    })
+  }
 }
 
 export default ManagementController;

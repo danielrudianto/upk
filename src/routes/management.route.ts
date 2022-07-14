@@ -17,4 +17,6 @@ router.post(
     ManagementController.submission
 );
 
+router.get("/request/:requestId", ManagementController.fetchById)
+
 export default router;

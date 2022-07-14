@@ -26,6 +26,8 @@ model post {
   is_delete    Boolean        @default(false)
   deleted_at   DateTime?      @db.DateTime(0)
   district_id  Int?
+  latitude     Decimal?       @db.Decimal(18, 15)
+  longitude    Decimal?       @db.Decimal(18, 15)
   user         user           @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "post_ibfk_1")
   district     district?      @relation(fields: [district_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "post_ibfk_2")
   post_comment post_comment[]

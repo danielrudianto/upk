@@ -4,6 +4,7 @@ import { validationResult } from "express-validator";
 import { v4 } from "uuid";
 import firebaseHelper from "../helper/firebase.helper";
 import MediaHelper from "../helper/media.helper";
+import DistrictModel from "../models/district.model";
 import UserModel from "../models/user.model.ts";
 
 class UserController {
@@ -189,6 +190,30 @@ class UserController {
         });
     }
   };
+
+  static fetch = (req: Request, res: Response) => {
+    const user_id = req.body.userId;
+    const district_id = req.body.districtId;
+    
+    if(district_id != null){
+      // Fetch office profile
+      DistrictModel.fetchProfileById(district_id).then(result => {
+
+      })
+    } else {
+      UserModel.fetchProfileById(user_id).then(result => {
+        return res.status(200).send({
+          ...result[0],
+          "user_subscription": undefined,
+          "is_active": (result[0] == null || result[0]?.user_subscription.length == 0) ? false : true,
+          "member": result[4] > 0,
+          "follower": result[1],
+          "following": result[2],
+          "post": result[3]
+        })
+      })
+    }
+  }
 }
 
 export default UserController;
