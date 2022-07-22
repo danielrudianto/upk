@@ -38,7 +38,7 @@ DistrictController.getCityAutocomplete = (req, res) => {
     if (keyword.length < 3) {
         return res.status(500).send("Mohon masukkan 3 karakter atau lebih.");
     }
-    district_model_1.default.getById(id).then(district => {
+    district_model_1.default.fetchById(id).then(district => {
         if (district == null || district.kota_id != null || district.kecamatan_id != null || district.kelurahan_id != null) {
             return res.status(404).send("Provinsi tidak ditemukan.");
         }
@@ -65,7 +65,7 @@ DistrictController.getKecamatanAutocomplete = (req, res) => {
     if (keyword.length < 2) {
         return res.status(500).send("Mohon masukkan 2 karakter atau lebih.");
     }
-    district_model_1.default.getById(id).then(district => {
+    district_model_1.default.fetchById(id).then(district => {
         if (district == null || district.kecamatan_id != null || district.kelurahan_id != null) {
             return res.status(404).send("Kota tidak ditemukan.");
         }
@@ -92,7 +92,7 @@ DistrictController.getKelurahanAutocomplete = (req, res) => {
     if (keyword.length < 2) {
         return res.status(500).send("Mohon masukkan 2 karakter atau lebih.");
     }
-    district_model_1.default.getById(id).then(district => {
+    district_model_1.default.fetchById(id).then(district => {
         if (district == null || district.kelurahan_id != null) {
             return res.status(404).send("Kecamatan tidak ditemukan.");
         }

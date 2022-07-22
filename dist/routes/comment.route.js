@@ -9,4 +9,5 @@ const social_media_controller_1 = __importDefault(require("../controller/social_
 const auth_helper_1 = __importDefault(require("../helper/auth.helper"));
 const router = (0, express_1.Router)();
 router.post("/", auth_helper_1.default.authMiddleware, (0, express_validator_1.body)('post_uid').not().isEmpty().withMessage("Mohon pilih post yang akan dikomentari."), (0, express_validator_1.body)('comment').not().isEmpty().withMessage("Kolom komentar tidak boleh kosong."), social_media_controller_1.default.createComment);
+router.delete("/:commentId", social_media_controller_1.default.deleteComment);
 exports.default = router;

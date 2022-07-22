@@ -12,9 +12,11 @@ const post_reaction_model_1 = __importDefault(require("../models/post_reaction.m
 const express_validator_1 = require("express-validator");
 const media_helper_1 = __importDefault(require("../helper/media.helper"));
 const transaction_helper_1 = __importDefault(require("../helper/transaction.helper"));
-class socialMediaController {
+const user_model_ts_1 = __importDefault(require("../models/user.model.ts"));
+const user_follow_model_1 = __importDefault(require("../models/user_follow.model"));
+class SocialMediaController {
 }
-socialMediaController.createPost = (req, res) => {
+SocialMediaController.createPost = (req, res) => {
     const post = new post_model_1.default(req.body.caption, req.body.userId, req.body.districtId);
     post
         .create()
@@ -41,7 +43,7 @@ socialMediaController.createPost = (req, res) => {
         if (files.length > 0) {
             const bucket = firebase_helper_1.default
                 .storage()
-                .bucket("gs://abangku-apps.appspot.com");
+                .bucket(process.env.STORAGE_REFERENCE);
             files.forEach((x, index) => {
                 bucket
                     .file(x.fileName)
@@ -70,9 +72,10 @@ socialMediaController.createPost = (req, res) => {
         return res.status(500).send(error);
     });
 };
-socialMediaController.deletePost = (req, res) => {
-    const post_uid = req.params.postId;
-    post_model_1.default.fetchPostByUID(post_uid).then((post) => {
+SocialMediaController.deletePost = (req, res) => {
+    const post_uid = req.params.post_uid;
+    post_model_1.default.fetchPostByUID(post_uid)
+        .then((post) => {
         if (post == null || post.is_delete) {
             return res.status(404).send("Post tidak ditemukan.");
         }
@@ -87,9 +90,14 @@ socialMediaController.deletePost = (req, res) => {
                 return res.status(500).send(error);
             });
         }
+    })
+        .catch((error) => {
+        console.error(`[error]: Fetching post ${new Date()}`);
+        console.error(`[error]: ${error}`);
+        return res.status(500).send(error);
     });
 };
-socialMediaController.createComment = (req, res) => {
+SocialMediaController.createComment = (req, res) => {
     const val_result = (0, express_validator_1.validationResult)(req);
     if (!val_result.isEmpty()) {
         return res.status(500).send(val_result.array()[0].msg);
@@ -126,7 +134,37 @@ socialMediaController.createComment = (req, res) => {
         return res.status(500).send(error);
     });
 };
-socialMediaController.react = (req, res) => {
+SocialMediaController.deleteComment = (req, res) => {
+    const commentId = parseInt(req.params.commentId.toString());
+    comment_model_1.default.fetchById(commentId)
+        .then((result) => {
+        if (result == null || result.is_delete) {
+            return res.status(404).send("Komentar tidak ditemukan.");
+        }
+        else if (result.created_by != req.body.userId) {
+            return res
+                .status(400)
+                .send("Dilarang menghapus komentar orang lain.");
+        }
+        else {
+            comment_model_1.default.deleteById(commentId)
+                .then((delete_result) => {
+                return res.status(200).send(delete_result);
+            })
+                .catch((error) => {
+                console.error(`[error]: Failed deleting comment ${new Date()}`);
+                console.error(`[error]: ${error}`);
+                return res.status(500).send(error);
+            });
+        }
+    })
+        .catch((error) => {
+        console.error(`[error]: Error fetching comment ${new Date()}`);
+        console.error(`[error]: ${error}`);
+        return res.status(500).send(error);
+    });
+};
+SocialMediaController.react = (req, res) => {
     const val_result = (0, express_validator_1.validationResult)(req);
     if (!val_result.isEmpty()) {
         return res.status(500).send(val_result.array()[0].msg);
@@ -170,25 +208,42 @@ socialMediaController.react = (req, res) => {
         }
     });
 };
-socialMediaController.fetchByUID = (req, res) => {
+SocialMediaController.fetchByUID = (req, res) => {
     const uid = req.params.postId;
     const fetch_posts = post_model_1.default.fetchPostByUID(uid);
     const fetch_comments = comment_model_1.default.fetchByPostUID(uid);
-    transaction_helper_1.default.create([
-        fetch_posts,
-        fetch_comments
-    ]).then(result => {
+    transaction_helper_1.default.create([fetch_posts, fetch_comments])
+        .then((result) => {
         if (result[0] == null || result[0].is_delete) {
             return res.status(404).send("Post tidak ditemukan.");
         }
-        return res.status(200).send(Object.assign(Object.assign({}, result[0]), { post_comment: result[1] }));
-    }).catch(error => {
+        const post = result[0];
+        post.user = {
+            uid: post.user.uid,
+            profile_image_url: post.user.profile_image_url == null
+                ? null
+                : `${process.env.STORAGE_URL}${post.user.profile_image_url}`,
+            name: post.user.name,
+        };
+        const comments = result[1];
+        comments.map((x) => {
+            return Object.assign(Object.assign({}, x), { user: {
+                    uid: x.user.uid,
+                    name: x.user.name,
+                    profile_image_url: x.user.profile_image_url == null
+                        ? null
+                        : `${process.env.STORAGE_URL}${x.user.profile_image_url}`,
+                } });
+        });
+        return res.status(200).send(Object.assign(Object.assign({}, post), { post_comment: comments }));
+    })
+        .catch((error) => {
         console.error(`[error]: Fetching post by UID ${new Date()}`);
         console.error(`[error]: ${error}`);
         return res.status(500).send(error);
     });
 };
-socialMediaController.fetch = (req, res) => {
+SocialMediaController.fetch = (req, res) => {
     const last_fetched = !req.query.last_fetched_post
         ? null
         : req.query.last_fetched_post.toString();
@@ -213,7 +268,15 @@ socialMediaController.fetch = (req, res) => {
             };
             posts[index].reaction = post_reaction;
         });
-        return res.status(200).send(posts);
+        return res.status(200).send(posts.map((x) => {
+            return Object.assign(Object.assign({}, x), { user: {
+                    name: x.user.name,
+                    profile_image_url: x.user.profile_image_url == null
+                        ? null
+                        : `${process.env.STORAGE_URL}${x.user.profile_image_url}`,
+                    uid: x.user.uid,
+                } });
+        }));
     })
         .catch((error) => {
         console.error(`[error]: Fetching posts ${new Date()}`);
@@ -221,15 +284,111 @@ socialMediaController.fetch = (req, res) => {
         return res.status(500).send(error);
     });
 };
-socialMediaController.fetchComments = (req, res) => {
-    const post_uid = req.params.postId;
-    const page = (!req.query.page) ? 1 : Math.max(parseInt(req.query.page.toString()), 1);
+SocialMediaController.fetchComments = (req, res) => {
+    const post_uid = req.params.post_uid;
+    const page = !req.query.page
+        ? 1
+        : Math.max(parseInt(req.query.page.toString()), 1);
     const limit = 10;
     const offset = (page - 1) * 10;
-    comment_model_1.default.fetchByPostUID(post_uid, offset, limit).then(result => {
-        return res.status(200).send(result);
-    }).catch(error => {
+    comment_model_1.default.fetchByPostUID(post_uid, offset, limit)
+        .then((result) => {
+        return res.status(200).send(result.map((x) => {
+            return Object.assign(Object.assign({}, x), { user: {
+                    uid: x.user.uid,
+                    name: x.user.name,
+                    profile_image_url: `${process.env.STORAGE_URL}${x.user.profile_image_url}`,
+                } });
+        }));
+    })
+        .catch((error) => {
+        console.error(`[error]: Error on following ${new Date()}`);
+        console.error(`[error]: ${error}`);
         return res.status(500).send(error);
     });
 };
-exports.default = socialMediaController;
+SocialMediaController.follow = (req, res) => {
+    const user_id = req.body.userId;
+    const user_uid_target = req.body.user_uid;
+    const district_id = req.body.districtId;
+    const district_id_target = req.body.district_id;
+    // Fetch user ID target
+    // If not null
+    if (user_uid_target != null) {
+        user_model_ts_1.default.fetchByUID(user_uid_target).then((user) => {
+            const user_id_target = user === null || user === void 0 ? void 0 : user.id;
+            user_follow_model_1.default.fetchExistingUser(user_id, district_id, user_id_target, district_id_target)
+                .then((follow) => {
+                if (follow == null) {
+                    // If have not follow
+                    // Then follow
+                    const user_follow = new user_follow_model_1.default(user_id, district_id, user_id_target);
+                    user_follow
+                        .create()
+                        .then((result) => {
+                        return res.status(201).send(result);
+                    })
+                        .catch((error) => {
+                        console.error(`[error]: Error on following ${new Date()}`);
+                        console.error(`[error]: ${error}`);
+                        return res.status(500).send(error);
+                    });
+                }
+            })
+                .catch((error) => {
+                console.error(`[error]: Error on following ${new Date()}`);
+                console.error(`[error]: ${error}`);
+                return res.status(500).send(error);
+            });
+        });
+    }
+    else {
+        const user_follow = new user_follow_model_1.default(user_id, district_id, null, district_id_target);
+        user_follow
+            .create()
+            .then((result) => { })
+            .catch((error) => {
+            console.error(`[error]: Error on following ${new Date()}`);
+            console.error(`[error]: ${error}`);
+            return res.status(500).send(error);
+        });
+    }
+};
+SocialMediaController.unfollow = (req, res) => {
+    const user_uid_target = req.params.user_id;
+    const user_id = req.body.userId;
+    const district_id = req.body.districtId;
+    const district_id_target = req.body.district_id;
+    user_model_ts_1.default.fetchByUID(user_uid_target)
+        .then((user) => {
+        user_follow_model_1.default.fetchExistingUser(user_id, district_id, user === null || user === void 0 ? void 0 : user.id, district_id_target)
+            .then((user_follow) => {
+            if (user_follow == null) {
+                // Not currently following the spesification required by the request
+                return res.status(404).send("Hubungan tidak ditemukan.");
+            }
+            else {
+                user_follow_model_1.default.delete(user_follow.id)
+                    .then((result) => {
+                    return res.status(201).send();
+                })
+                    .catch((error) => {
+                    console.error(`[error]: Error unfollowing ${new Date()}`);
+                    console.error(`[error]: ${error}`);
+                    return res.status(500).send(error);
+                });
+            }
+        })
+            .catch((error) => {
+            console.error(`[error]: Error unfollowing ${new Date()}`);
+            console.error(`[error]: ${error}`);
+            return res.status(500).send(error);
+        });
+    })
+        .catch((error) => {
+        console.error(`[error]: Error unfollowing ${new Date()}`);
+        console.error(`[error]: ${error}`);
+        return res.status(500).send(error);
+    });
+};
+exports.default = SocialMediaController;

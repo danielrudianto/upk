@@ -67,6 +67,8 @@ class PostModel {
                     user: {
                         select: {
                             name: true,
+                            uid: true,
+                            profile_image_url: true
                         },
                     },
                     post_media: {
@@ -133,6 +135,8 @@ class PostModel {
                     user: {
                         select: {
                             name: true,
+                            uid: true,
+                            profile_image_url: true,
                         },
                     },
                     post_media: {

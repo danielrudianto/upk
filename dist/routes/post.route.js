@@ -8,9 +8,9 @@ const social_media_controller_1 = __importDefault(require("../controller/social_
 const express_validator_1 = require("express-validator");
 const router = (0, express_1.Router)();
 router.get("/:postId", social_media_controller_1.default.fetchByUID);
-router.get("/comment/:postId", social_media_controller_1.default.fetchComments);
+router.get("/comment/:post_uid", social_media_controller_1.default.fetchComments);
 router.get("/", social_media_controller_1.default.fetch);
 router.post("/", social_media_controller_1.default.createPost);
-router.delete("/:postId", social_media_controller_1.default.deletePost);
+router.delete("/:post_uid", social_media_controller_1.default.deletePost);
 router.post("/reaction", (0, express_validator_1.body)("post_uid").not().isEmpty().withMessage("Mohon isikan post UID."), social_media_controller_1.default.react);
 exports.default = router;

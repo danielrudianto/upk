@@ -22,6 +22,9 @@ class TransactionModel {
         this.is_paid = false;
         this.paid_at = null;
         this.payment_reference = null;
+        const date = this.created_at;
+        date.setHours(date.getHours() + parseInt(process.env.PAYMENT_EXPIRE));
+        this.payment_expired_date = date;
     }
     create() {
         return prisma.user_transaction.create({
@@ -41,6 +44,7 @@ class TransactionModel {
                 payment_reference: this.payment_reference,
                 created_by: this.created_by,
                 created_at: this.created_at,
+                payment_expired_date: this.payment_expired_date
             },
             select: {
                 id: true,
@@ -62,6 +66,13 @@ class TransactionModel {
                         logo: true,
                     },
                 },
+                payment_expired_date: true,
+                user: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                }
             },
         });
     }
@@ -93,8 +104,7 @@ class TransactionModel {
                             user: {
                                 select: {
                                     name: true,
-                                    uid: true,
-                                    profile_image_url: true,
+                                    uid: true
                                 },
                             },
                             district: {
@@ -138,8 +148,7 @@ class TransactionModel {
                             user: {
                                 select: {
                                     name: true,
-                                    uid: true,
-                                    profile_image_url: true,
+                                    uid: true
                                 },
                             },
                             district: {
@@ -183,8 +192,7 @@ class TransactionModel {
                             user: {
                                 select: {
                                     name: true,
-                                    uid: true,
-                                    profile_image_url: true,
+                                    uid: true
                                 },
                             },
                             district: {
@@ -230,8 +238,7 @@ class TransactionModel {
                             user: {
                                 select: {
                                     name: true,
-                                    uid: true,
-                                    profile_image_url: true,
+                                    uid: true
                                 },
                             },
                             district: {
@@ -274,8 +281,7 @@ class TransactionModel {
                             user: {
                                 select: {
                                     name: true,
-                                    uid: true,
-                                    profile_image_url: true,
+                                    uid: true
                                 },
                             },
                             district: {
@@ -318,8 +324,7 @@ class TransactionModel {
                             user: {
                                 select: {
                                     name: true,
-                                    uid: true,
-                                    profile_image_url: true,
+                                    uid: true
                                 },
                             },
                             district: {
@@ -345,6 +350,13 @@ class TransactionModel {
         else {
             throw Error("Request tidak valid.");
         }
+    }
+    static fetchById(id) {
+        return prisma.user_transaction.findUnique({
+            where: {
+                id: id
+            }
+        });
     }
     static count(mode, user_id = null, district_id = null) {
         if (district_id != null) {
@@ -407,6 +419,29 @@ class TransactionModel {
         else {
             throw Error("Request tidak valid.");
         }
+    }
+    static checkRunningTransaction(user_id) {
+        return prisma.user_transaction.count({
+            where: {
+                payment_expired_date: {
+                    gte: new Date()
+                },
+                created_by: user_id,
+                is_paid: false
+            }
+        });
+    }
+    static approvePayment(transaction_id, payment_reference) {
+        return prisma.user_transaction.update({
+            where: {
+                id: transaction_id
+            },
+            data: {
+                is_paid: true,
+                paid_at: new Date(),
+                payment_reference: payment_reference,
+            }
+        });
     }
 }
 exports.default = TransactionModel;

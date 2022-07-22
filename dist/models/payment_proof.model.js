@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
-class PaymentProof {
+class PaymentProofModel {
     constructor(user_subscription_id, user_transaction_id, url, created_by) {
         this.user_subscription_id = user_subscription_id;
         this.user_transaction_id = user_transaction_id;
@@ -22,4 +22,4 @@ class PaymentProof {
         });
     }
 }
-exports.default = PaymentProof;
+exports.default = PaymentProofModel;

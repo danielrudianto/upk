@@ -4,8 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const callback_controller_1 = __importDefault(require("../controller/callback.controller"));
+const social_media_controller_1 = __importDefault(require("../controller/social_media.controller"));
 const router = (0, express_1.Router)();
-// Development purpose only
-router.post("/approve", callback_controller_1.default.approvePayment);
+router.post("/follow", social_media_controller_1.default.follow);
+router.delete("/follow/:user_uid", social_media_controller_1.default.unfollow);
 exports.default = router;

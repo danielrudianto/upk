@@ -102,7 +102,7 @@ authController.register = (req, res, next) => {
             return res.status(500).send("Password tidak sesuai kriteria.");
         }
         // Comparing NIK based location with filled location
-        district_model_1.default.getById(district_id).then((result) => __awaiter(void 0, void 0, void 0, function* () {
+        district_model_1.default.fetchById(district_id).then((result) => __awaiter(void 0, void 0, void 0, function* () {
             if (result == null) {
                 return res.status(404).send("Kelurahan tidak ditemukan.");
             }
@@ -129,7 +129,7 @@ authController.register = (req, res, next) => {
                             .then(() => {
                             return res
                                 .status(201)
-                                .send("Pendaftaran pengguna berhasil.");
+                                .send(result);
                         })
                             .catch((error) => {
                             console.error(`[error]: Failed to register to firebase ${new Date()}`);
@@ -198,6 +198,7 @@ authController.login = (req, res, next) => {
                 parseInt(process.env.expiration) * 60 * 60 * 1000);
             const token = (0, jsonwebtoken_1.sign)({
                 id: result.id,
+                uid: result.uid,
                 name: result.name,
                 district: result.district.name,
                 phone_number: result.phone_number,
@@ -210,6 +211,7 @@ authController.login = (req, res, next) => {
                 token: token,
                 expiration: expiration.getTime(),
                 user: {
+                    uid: result.uid,
                     name: result.name,
                     district: result.district.name,
                     phone_number: result.phone_number,
@@ -264,6 +266,7 @@ authController.login = (req, res, next) => {
                 parseInt(process.env.expiration) * 60 * 60 * 1000);
             const token = (0, jsonwebtoken_1.sign)({
                 id: user.id,
+                uid: user.uid,
                 name: user.name,
                 district: user.district.name,
                 phone_number: user.phone_number,
