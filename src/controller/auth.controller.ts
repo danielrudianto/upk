@@ -108,7 +108,7 @@ class authController {
         }
 
         // Comparing NIK based location with filled location
-        DistrictModel.getById(district_id).then(async (result) => {
+        DistrictModel.fetchById(district_id).then(async (result) => {
           if (result == null) {
             return res.status(404).send("Kelurahan tidak ditemukan.");
           }

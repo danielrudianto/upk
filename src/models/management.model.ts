@@ -295,6 +295,82 @@ class UserManagementModel {
       },
     });
   }
+
+  static fetchStructureByDistrictId(district_id: number){
+    return prisma.user_management.findMany({
+      where:{
+        is_approved: true,
+        is_delete: false,
+        district_id: district_id
+      },
+      select: {
+        user: {
+          select: {
+            uid: true,
+            profile_image_url: true,
+            nik: true
+          }
+        },
+        management_level: true
+      }
+    })
+  }
+
+  static fetchMemberCount(provinsi_id: string | null = null, kota_id: string | null = null, kecamatan_id: string | null = null){
+    if(provinsi_id == null){
+      return prisma.user.count({
+        where:{
+          user_subscription: {
+            some: {
+              is_paid: true
+            }
+          }
+        }
+      })
+    } else if(provinsi_id != null && kota_id == null){
+      return prisma.user.count({
+        where:{
+          district: {
+            provinsi_id: provinsi_id,
+          },
+          user_subscription: {
+            some: {
+              is_paid: true
+            }
+          }
+        }
+      })
+    } else if(provinsi_id != null && kota_id != null && kecamatan_id == null){
+      return prisma.user.count({
+        where:{
+          district: {
+            provinsi_id: provinsi_id,
+            kota_id: kota_id
+          },
+          user_subscription: {
+            some: {
+              is_paid: true
+            }
+          }
+        }
+      })
+    } else {
+      return prisma.user.count({
+        where:{
+          district: {
+            provinsi_id: provinsi_id,
+            kota_id: kota_id,
+            kecamatan_id: kecamatan_id
+          },
+          user_subscription: {
+            some: {
+              is_paid: true
+            }
+          }
+        }
+      })
+    }
+  }
 }
 
 export default UserManagementModel;

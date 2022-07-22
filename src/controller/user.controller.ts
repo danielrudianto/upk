@@ -198,7 +198,20 @@ class UserController {
     if(district_id != null){
       // Fetch office profile
       DistrictModel.fetchProfileById(district_id).then(result => {
+        return res.status(200).send({
+          ...result[0],
+          "user_subscription": undefined,
+          "follower": result[1],
+          "following": result[2],
+          "post": result[3]
+        })
+      }).catch(error => {
+        console.error(
+          `[error]: Failed to fetch profile ${new Date()}`
+        );
+        console.error(`[error]: ${error}`);
 
+        return res.status(500).send(error);
       })
     } else {
       UserModel.fetchProfileById(user_id).then(result => {
@@ -211,6 +224,13 @@ class UserController {
           "following": result[2],
           "post": result[3]
         })
+      }).catch(error => {
+        console.error(
+          `[error]: Failed to fetch profile ${new Date()}`
+        );
+        console.error(`[error]: ${error}`);
+
+        return res.status(500).send(error);
       })
     }
   }

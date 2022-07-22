@@ -18,6 +18,7 @@ import subscriptionRoutes from './routes/subscription.route';
 import authHelper from './helper/auth.helper';
 import profileRoutes from './routes/profile.route';
 import socialMediaRoutes from './routes/social_media.route';
+import reportRoutes from './routes/report.route';
 
 dotenv.config();
 
@@ -46,10 +47,10 @@ app.use('/membership', authHelper.authMiddleware, subscriptionRoutes);
 app.use('/profile', authHelper.authMiddleware, profileRoutes);
 
 app.use('/management', authHelper.authMiddleware, managementRoutes);
+app.use("/report", authHelper.authMiddleware, reportRoutes);
 
 app.listen(port, () => {
   console.log(`[server] Server is running at https://localhost:${port}`);
-  
   // Referesh Banking token
   // BRI_service.scheduleRefreshBRIToken();
 });

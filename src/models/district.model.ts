@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 class DistrictModel {
-  static getById(id: number) {
+  static fetchById(id: number) {
     return prisma.district.findUnique({
       where: {
         id: id,
@@ -123,16 +123,141 @@ class DistrictModel {
     });
   }
 
-  static fetchProfileById(id: number){
-    return prisma.district.findUnique({
-      where:{
-        id: id
-      },
-      select: {
-        
-      }
-    })
+  static fetchProfileById(id: number) {
+    return prisma.$transaction([
+      prisma.district.findUnique({
+        where: {
+          id: id,
+        },
+        select: {
+          profile_image_url: true,
+          provinsi_id: true,
+          kota_id: true,
+          kecamatan_id: true,
+          kelurahan_id: true,
+        },
+      }),
+      prisma.user_follow.count({
+        where: {
+          user_id_target: id,
+          deleted_at: null,
+        },
+      }),
+      prisma.user_follow.count({
+        where: {
+          user_id: id,
+          deleted_at: null,
+        },
+      }),
+      prisma.post.count({
+        where: {
+          created_by: id,
+          is_delete: false,
+        },
+      }),
+    ]);
   }
+
+  static fetchChildren(provinsi_id: string | null = null, kota_id: string | null = null, kecamatan_id: string | null = null){
+    if(provinsi_id != null && kota_id == null) {
+      return prisma.district.findMany({
+        where:{
+          AND: [
+            {
+              provinsi_id: provinsi_id
+            },
+            {
+              kota_id: {
+                not: null
+              }
+            }, 
+            {
+              kecamatan_id: null
+            },
+            {
+              kelurahan_id: null
+            }
+          ]
+        },
+        select: {
+          id: true,
+          name: true,
+          profile_image_url: true,
+          provinsi_id: true,
+          kota_id: true,
+          kecamatan_id: true,
+        },
+        orderBy: {
+          name: "asc"
+        }
+      })
+    } else if(provinsi_id != null && kota_id != null && kecamatan_id == null){
+      return prisma.district.findMany({
+        where:{
+          AND: [
+            {
+              provinsi_id: provinsi_id
+            },
+            {
+              kota_id: kota_id
+            }, 
+            {
+              kecamatan_id: {
+                not: null
+              }
+            },
+            {
+              kelurahan_id: null
+            }
+          ]
+        },
+        select: {
+          id: true,
+          name: true,
+          profile_image_url: true,
+          provinsi_id: true,
+          kota_id: true,
+          kecamatan_id: true,
+        },
+        orderBy: {
+          name: "asc"
+        }
+      })
+    } else {
+      return prisma.district.findMany({
+        where:{
+          AND: [
+            {
+              provinsi_id: {
+                not: null
+              }
+            }, 
+            {
+              kota_id: null
+            }, 
+            {
+              kecamatan_id: null
+            },
+            {
+              kelurahan_id: null
+            }
+          ]
+        },
+        select: {
+          id: true,
+          name: true,
+          profile_image_url: true,
+          provinsi_id: true,
+          kota_id: true,
+          kecamatan_id: true,
+        },
+        orderBy: {
+          name: "asc"
+        }
+      })
+    }
+  }
+
 }
 
 export default DistrictModel;

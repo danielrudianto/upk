@@ -68,7 +68,7 @@ class ManagementController {
               const user_district = user?.user_management[0].district_id;
               const user_management = user?.user_management[0].management_level;
 
-              DistrictModel.getById(user_district!)
+              DistrictModel.fetchById(user_district!)
                 .then((district) => {
                   if (submission.management_level == 1) {
                     // Request to become a "Ketua" managemenent level
@@ -264,7 +264,7 @@ class ManagementController {
 
   static fetch = (req: Request, res: Response) => {
     const district_id = req.body.districtId;
-    DistrictModel.getById(district_id)
+    DistrictModel.fetchById(district_id)
       .then((district) => {
         // Get the user's district account
         // Then get user management submission
