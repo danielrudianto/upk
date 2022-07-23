@@ -2,7 +2,6 @@ import { NextFunction, Request, Response } from "express";
 import { verify } from "jsonwebtoken";
 import UserManagementModel from "../models/management.model";
 import UserModel from "../models/user.model.ts";
-import QueryTransactionHelper from "./transaction.helper";
 
 class authHelper {
   static authMiddleware = (req: Request, res: Response, next: NextFunction) => {
@@ -32,7 +31,7 @@ class authHelper {
           const id = parseInt((decoded as any).id);
           const user_management_id = (decoded as any).user_management_id;
 
-          QueryTransactionHelper.create([
+          Promise.all([
             UserModel.fetchById(id),
             UserManagementModel.fetchById(user_management_id),
           ])

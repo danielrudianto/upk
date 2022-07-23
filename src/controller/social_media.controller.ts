@@ -7,7 +7,6 @@ import CommentModel from "../models/comment.model";
 import PostReactionModel from "../models/post_reaction.model";
 import { validationResult } from "express-validator";
 import MediaHelper from "../helper/media.helper";
-import QueryTransactionHelper from "../helper/transaction.helper";
 import UserModel from "../models/user.model.ts";
 import UserFollowModel from "../models/user_follow.model";
 
@@ -246,7 +245,7 @@ class SocialMediaController {
     const fetch_posts = PostModel.fetchPostByUID(uid);
     const fetch_comments = CommentModel.fetchByPostUID(uid);
 
-    QueryTransactionHelper.create([fetch_posts, fetch_comments])
+    Promise.all([fetch_posts, fetch_comments])
       .then((result) => {
         if (result[0] == null || result[0].is_delete) {
           return res.status(404).send("Post tidak ditemukan.");

@@ -4,8 +4,9 @@ import UserManagementModel from "../models/management.model";
 
 class ReportController {
   static fetchStructure = (req: Request, res: Response) => {
-    const district_id = parseInt(req.body.districtId);
-    UserManagementModel.fetchStructureByDistrictId(district_id)
+    if(req.query.district_id == undefined){
+      const district_id = parseInt(req.body.districtId.toString());
+      UserManagementModel.fetchStructureByDistrictId(district_id)
       .then((result) => {
         return res.status(200).send(result);
       })
@@ -15,6 +16,68 @@ class ReportController {
 
         return res.status(500).send(error);
       });
+    } else {
+      const district_id = parseInt(req.query.district_id.toString());
+      Promise.all([
+        DistrictModel.fetchById(req.body.districtId),
+        DistrictModel.fetchById(district_id)
+      ]).then(result => {
+        const user_district = result[0];
+        const view_district = result[1];
+
+        // User district must be more superior than the view district
+        if(view_district == null) {
+          return res.status(404).send("Area tidak ditemukan.");
+        } else if(view_district?.kecamatan_id != null && view_district.kota_id != null && view_district.provinsi_id != null){
+          // View kecamatan office info
+          if((user_district?.provinsi_id == null && user_district?.kota_id == null && user_district?.kecamatan_id == null && user_district?.kelurahan_id == null) || (user_district.provinsi_id == view_district.provinsi_id && user_district.kota_id == view_district.kota_id && user_district.kecamatan_id != null) || (user_district.provinsi_id == view_district.provinsi_id && user_district.kota_id != null)){
+            UserManagementModel.fetchStructureByDistrictId(district_id).then(result => {
+              return res.status(200).send(result);
+            }).catch(error => {
+              console.error(`[error]: Error on fetching district info ${new Date()}`);
+              console.error(`[error]: ${error}`);
+
+              return res.status(500).send(error);
+            });
+          } else {
+            // If user is not in Kantor Pusat or in Related Kantor Provinsi
+            return res.status(405).send("Autorisasi tidak diijinkan.");
+          }
+        } else if(view_district.kecamatan_id == null && view_district.kota_id != null && view_district.provinsi_id != null){
+          // View kota office info
+          if((user_district?.provinsi_id == null && user_district?.kota_id == null && user_district?.kecamatan_id == null && user_district?.kelurahan_id == null) || (user_district.provinsi_id == view_district.provinsi_id && user_district.kota_id == null)){
+            UserManagementModel.fetchStructureByDistrictId(district_id).then(result => {
+              return res.status(200).send(result);
+            }).catch(error => {
+              console.error(`[error]: Error on fetching district info ${new Date()}`);
+              console.error(`[error]: ${error}`);
+
+              return res.status(500).send(error);
+            });
+          } else {
+            // If user is not in Kantor Pusat or in Related Kantor Provinsi
+            return res.status(405).send("Autorisasi tidak diijinkan.");
+          }
+        } else if(view_district.kecamatan_id == null && view_district.kota_id == null && view_district.provinsi_id != null){
+          // View provinsi office info
+          if(user_district?.provinsi_id == null && user_district?.kota_id == null && user_district?.kecamatan_id == null && user_district?.kelurahan_id == null){
+            // If user is in Kantor Pusat
+            UserManagementModel.fetchStructureByDistrictId(district_id).then(result => {
+              return res.status(200).send(result);
+            }).catch(error => {
+              console.error(`[error]: Error on fetching district info ${new Date()}`);
+              console.error(`[error]: ${error}`);
+
+              return res.status(500).send(error);
+            });
+          } else {
+            // If user is not in Kantor Pusat
+            return res.status(405).send("Autorisasi tidak diijinkan.");
+          }
+        }
+      });
+    }
+    
   };
 
   static fetchBranchStructure = (req: Request, res: Response) => {
@@ -122,7 +185,7 @@ class ReportController {
         // Kantor kecamatan
         return res.status(200).send([]);
       }
-    });
+    });    
   };
 
   static fetchMemberCount = (req: Request, res: Response) => {

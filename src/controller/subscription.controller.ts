@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { validationResult } from "express-validator";
-import QueryTransactionHelper from "../helper/transaction.helper";
 import SubscriptionModel from "../models/subscription.model";
 import TransactionModel from "../models/transaction.model";
 
@@ -53,7 +52,7 @@ class SubscriptionController {
     const payment_method = parseInt(req.body.payment_method);
 
     // Check if there is a transaction that is not expired
-    QueryTransactionHelper.create([
+    Promise.all([
       SubscriptionModel.checkRunningTransaction(userId),
       TransactionModel.checkRunningTransaction(userId),
     ])

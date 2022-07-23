@@ -1,7 +1,6 @@
 import axios from "axios";
 import { Request, Response } from "express";
 import BRI_service from "../helper/bank.service";
-import QueryTransactionHelper from "../helper/transaction.helper";
 import PaymentModel from "../models/payment.model";
 import TransactionModel from "../models/transaction.model";
 
@@ -16,7 +15,7 @@ class TransactionController {
     const offset = (page - 1) * limit;
     const mode = !req.query.mode ? 1 : parseInt(req.query.mode?.toString());
 
-    QueryTransactionHelper.create([
+    Promise.all([
       TransactionModel.fetch(mode, userId, districtId, offset, limit),
       TransactionModel.count(mode, userId, districtId),
     ])
@@ -41,7 +40,6 @@ class TransactionController {
     */
 
     const productCodeName = req.body.code_name;
-    const branchTransaction = req.body.branch_transaction == 1 ? true : false;
     const paymentMethod = parseInt(req.body.payment_method);
     const purchaseReference = req.body.purchase_reference;
 
@@ -122,8 +120,15 @@ class TransactionController {
 
                     return res.status(500).send(error);
                   });
-              });
-          } catch (error) {}
+              }).catch(error => {
+                return res.status(500).send(error);
+              })
+          } catch (error) {
+            console.error(`[error]: Error fetching product ${new Date()}`);
+            console.error(`[error]: ${error}`);
+
+            return res.status(500).send(error);
+          }
         }
       })
       .catch((error) => {
@@ -133,6 +138,37 @@ class TransactionController {
         return res.status(500).send(error);
       });
   };
+  
+  static topUp = (req: Request, res: Response) => {
+    const value = parseFloat(req.body.value);
+    const paymentMethod = parseInt(req.body.payment_method);
+
+    if(!req.body.value || value == 0){
+      return res.status(400).send("Mohon input nominal yang sesuai.");
+    } else {
+      const user_transaction = new TransactionModel(
+        req.body.userId,
+        value,
+        parseInt(process.env.ADMINISTRATION_FEE!),
+        0,
+        "TOPUP",
+        "",
+        "",
+        paymentMethod,
+        req.body.districtId,
+        req.body.note
+      );
+
+      user_transaction.create().then(result => {
+        return res.status(201).send(result);
+      }).catch(error => {
+        console.error(`[error]: Error createing transaction ${new Date()}`);
+        console.error(`[error]: ${error}`);
+
+        return res.status(500).send(error);
+      })
+    }
+  }
 }
 
 export default TransactionController;
